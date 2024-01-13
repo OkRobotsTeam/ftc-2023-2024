@@ -31,6 +31,7 @@ import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 class PropDetection extends OpenCvPipeline
 {
@@ -38,37 +39,41 @@ class PropDetection extends OpenCvPipeline
     private Mat blurredImage = new Mat();
     private Mat hslImage = new Mat();
     private Mat thresholded = new Mat();
-    private ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+
+    private final AtomicReference<ArrayList<MatOfPoint>> contours = new AtomicReference<>();
 
 
     @Override
     public Mat processFrame(Mat input)
     {
+
         // Resize the image
         Imgproc.resize(input, scaledImage, new Size(0,0), CSConstants.imageScalingFactor, CSConstants.imageScalingFactor, Imgproc.INTER_LINEAR);
 
         Imgproc.blur(scaledImage, blurredImage, new Size(CSConstants.imageBlurKernelSize, CSConstants.imageBlurKernelSize));
 
-        Imgproc.cvtColor(blurredImage, thresholded, Imgproc.COLOR_BGR2HLS);
+
+        Mat leftCropZone = blurredImage.submat()
+
+                Imgproc.cvtColor(blurredImage, thresholded, Imgproc.COLOR_BGR2HLS);
 
         Core.inRange(thresholded, new Scalar(CSConstants.hueRange[0], CSConstants.luminanceRange[0], CSConstants.saturationRange[0]),
                                   new Scalar(CSConstants.hueRange[1], CSConstants.luminanceRange[1], CSConstants.saturationRange[1]), thresholded);
 
-        Imgproc.findContours(thresholded, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+//        A temporary array to store the contours before they are sent to the AtomicReference
+        ArrayList<MatOfPoint> temp_contours = new ArrayList<>() ;
 
-        System.out.println("Found: " + contours.size() + " contours");
+        Imgproc.findContours(thresholded, temp_contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        contours.set(temp_contours);
 
         return thresholded;
+
     }
 
-    public ArrayList<AprilTagDetection> getDetectionsUpdate()
+    public ArrayList<MatOfPoint> getDetectionsUpdate()
     {
-        synchronized (detectionsUpdateSync)
-        {
-            ArrayList<AprilTagDetection> ret = detectionsUpdate;
-            detectionsUpdate = null;
-            return ret;
-        }
+        return contours.getAndSet(null);
     }
 
 }
