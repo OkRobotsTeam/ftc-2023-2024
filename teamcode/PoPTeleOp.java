@@ -31,9 +31,11 @@ package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.ButtonPressDetector.Button.*;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+@Disabled
 @TeleOp(name = "PoPTeleOp", group = "TeleOp")
 
 public class PoPTeleOp extends LinearOpMode implements MecanumDrive.TickCallback {

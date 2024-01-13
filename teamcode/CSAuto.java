@@ -29,66 +29,52 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "CS TeleOp", group = "TeleOp")
 
-public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback {
+@Autonomous(name = "CSAuto", group = "Autonomous")
+
+public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
 
 
     private final MecanumDrive mecanumDrive = new MecanumDrive();
 
-    private final CSRobot robot = new CSRobot();
 
+    private final CSRobot robot = new CSRobot();
+    private int sleeveCode;
+
+    private enum ScoringDirection {SCORE_LEFT, SCORE_RIGHT}
+    private ScoringDirection scoringDirection = ScoringDirection.SCORE_LEFT;
+    private int path = 0;
 
     @Override
     public void runOpMode() {
+
         robot.init(hardwareMap, telemetry, this);
         mecanumDrive.init(hardwareMap, telemetry, this);
+        mecanumDrive.setCountPerDegree(7);
+
         robot.setDrivetrainMotorDirections(mecanumDrive);
         mecanumDrive.setupTickCallback(this);
-        ButtonPressDetector pad2pressDetector = new ButtonPressDetector(gamepad2);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
 
         waitForStart();
+        mecanumDrive.forward(26, 0.5);
+        if (path == 1) {
+            mecanumDrive.leftTurn(90, 0.5);
+            mecanumDrive.forward(24, 0.5);
+        } else if (path == 3) {
+            mecanumDrive.rightTurn(90, 0.5);
+            mecanumDrive.forward(24, 0.5);
+        }
 
         while (opModeIsActive()) {
             standardMecanumControls();
-            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.a)) {
-                robot.startDockingArm();
-
-            } else if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.b)) {
-                robot.startUndockingArm();
-
-            }
-
-            // Handle manual elbow update
-            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_up)) {
-                robot.elbowUp();
-            } else if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_down)) {
-                robot.elbowDown();
-            }
-
-            // Handle opening and closing the fingers
-            if (gamepad2.left_bumper) {
-                robot.openLeftFinger();
-            } else {
-                robot.closeLeftFinger();
-            }
-            if (gamepad2.right_bumper) {
-                robot.openRightFinger();
-            } else {
-                robot.closeRightFinger();
-            }
-
-            telemetry.addData("Shoulder", robot.getShoulderPosition());
-            telemetry.addData("Elbow", robot.getElbowPosition());
-            telemetry.addData("Wrist", robot.getWristPosition());
-            telemetry.addData("ArmState", robot.getArmState());
         }
+        mecanumDrive.tickSleep();
     }
 
     public void standardMecanumControls() {
@@ -106,16 +92,14 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
         mecanumDrive.setMotors(strafe, fwd, rot, 1);
     }
 
+    public void tickCallback() {
+    }
 
     double addDeadZone(double input) {
         if (Math.abs(input) < 0.1) {
             return (0.0);
         }
         return (input);
-    }
-
-    public void tickCallback() {
-
     }
 
 }

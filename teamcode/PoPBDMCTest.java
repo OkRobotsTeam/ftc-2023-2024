@@ -35,8 +35,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import static org.firstinspires.ftc.teamcode.ButtonPressDetector.Button;
 
-@TeleOp(name="PoPTurretTestBDMC", group ="TeleOp")
 @Disabled
+@TeleOp(name="PoPTurretTestBDMC", group ="TeleOp")
 public class PoPBDMCTest extends LinearOpMode  {
     private static final int TURRET_COUNT_PER_DEGREE = 135;
     BrakingDistanceMotorController turret = null;

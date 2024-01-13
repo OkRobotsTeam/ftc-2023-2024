@@ -30,9 +30,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-
+@Disabled
 @Autonomous(name = "PoPAuto Multi Cone", group = "Autonomous")
 
 public class PoPAutoMultiCone extends LinearOpMode implements MecanumDrive.TickCallback {
