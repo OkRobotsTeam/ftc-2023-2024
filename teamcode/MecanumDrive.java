@@ -118,6 +118,7 @@ public class MecanumDrive {
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.loggingEnabled      = false;
+
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
         loadIMUCalibration("AdafruitIMUCalibration.json");
@@ -784,6 +785,7 @@ public class MecanumDrive {
     }
 
     Orientation getOrientation() {
+        //TODO: Fix angle used
         return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
     }
 

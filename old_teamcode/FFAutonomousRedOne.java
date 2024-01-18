@@ -29,12 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.MecanumDrive.MoveDirection.LEFT;
-import static org.firstinspires.ftc.teamcode.MecanumDrive.MoveDirection.RIGHT;
-import static org.firstinspires.ftc.teamcode.UGObjectDetector.ringStackState.NONE;
-import static org.firstinspires.ftc.teamcode.UGObjectDetector.ringStackState.QUAD;
-import static org.firstinspires.ftc.teamcode.UGObjectDetector.ringStackState.SINGLE;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;

@@ -88,6 +88,9 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
             telemetry.addData("Elbow", robot.getElbowPosition());
             telemetry.addData("Wrist", robot.getWristPosition());
             telemetry.addData("ArmState", robot.getArmState());
+            telemetry.addData("IMU_Z", mecanumDrive.getOrientation().firstAngle);
+            telemetry.addData("IMU_Y", mecanumDrive.getOrientation().secondAngle);
+            telemetry.addData("IMU_X", mecanumDrive.getOrientation().thirdAngle);
         }
     }
 

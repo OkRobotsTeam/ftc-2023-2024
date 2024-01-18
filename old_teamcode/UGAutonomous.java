@@ -32,7 +32,10 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import static org.firstinspires.ftc.teamcode.MecanumDrive.MoveDirection.*;
-import static org.firstinspires.ftc.teamcode.UGObjectDetector.ringStackState.*;
+import static org.firstinspires.ftc.old_teamcode.UGObjectDetector.ringStackState.*;
+
+import org.firstinspires.ftc.old_teamcode.UGObjectDetector;
+import org.firstinspires.ftc.old_teamcode.UGRobot;
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name="Ultimate Goal Auto", group ="Concept")
 @Disabled

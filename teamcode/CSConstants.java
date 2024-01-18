@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Pair;
-
-import java.util.Vector;
 
 public class CSConstants {
     public final static double imageScalingFactor = 0.25;

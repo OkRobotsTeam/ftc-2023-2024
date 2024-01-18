@@ -205,6 +205,6 @@ public class CSRobot {
     }
 
     public void setDrivetrainMotorDirections(MecanumDrive mecanumDrive) {
-        mecanumDrive.setMotorDirections(REVERSE, FORWARD, FORWARD, REVERSE);
+        mecanumDrive.setMotorDirections(FORWARD, REVERSE, FORWARD, REVERSE);
     }
 }
