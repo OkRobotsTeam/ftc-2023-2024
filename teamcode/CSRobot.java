@@ -29,6 +29,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  */
 
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -43,7 +44,9 @@ public class CSRobot {
     private Servo wrist = null;
     private Servo leftFinger = null;
     private Servo rightFinger = null;
+    private CRServo launcher = null;
     long wristStartedMoving = 0;
+    private long endgameDeployStartTime = -1;
     private Telemetry telemetry = null;
 
     double wristPosition = 0;
@@ -76,6 +79,7 @@ public class CSRobot {
         wrist = hardwareMap.get(Servo.class, "wrist");
         leftFinger = hardwareMap.get(Servo.class, "left_finger");
         rightFinger = hardwareMap.get(Servo.class, "right_finger");
+        launcher = hardwareMap.get(CRServo.class, "launcher");
 
         shoulder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         elbow.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -99,6 +103,18 @@ public class CSRobot {
 
     public armStates getArmState() {
         return armState;
+    }
+
+    public void deployEndgame() {
+        endgameDeployStartTime = System.currentTimeMillis();
+    }
+
+    public void endgameTick() {
+        if (endgameDeployStartTime >= 0) {
+            launcher.setPower(1);
+        } else if (((System.currentTimeMillis() - endgameDeployStartTime) / 1000.0d) > CSConstants.endgameRuntimeSeconds) {
+            launcher.setPower(0);
+        }
     }
 
     public boolean isAtDestination(DcMotorEx motor) {

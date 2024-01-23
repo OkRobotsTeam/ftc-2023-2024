@@ -84,6 +84,12 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
                 robot.closeRightFinger();
             }
 
+            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.x)) {
+                robot.deployEndgame();
+            }
+            // Process endgame firing
+            robot.endgameTick();
+
             telemetry.addData("Shoulder", robot.getShoulderPosition());
             telemetry.addData("Elbow", robot.getElbowPosition());
             telemetry.addData("Wrist", robot.getWristPosition());

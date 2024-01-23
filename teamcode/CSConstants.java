@@ -40,5 +40,7 @@ public class CSConstants {
     public final static double leftFingerClosedPosition = 0;
     public final static double rightFingerClosedPosition = 0;
 
+    public final static double endgameRuntimeSeconds = 2.0;
+
 
 }
