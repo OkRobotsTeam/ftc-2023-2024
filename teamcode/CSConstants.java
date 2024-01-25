@@ -16,10 +16,11 @@ public class CSConstants {
 
     // Dock/Undock values for shoulder, elbow, and wrist
     public final static int shoulderReadyForDockUndock = 200;
-    public final static int elbowReadyForDockUndock = 200;
-    public final static int wristUpright = 1;
-    public final static double wristDocking = 0;
-    public final static long wristMoveMilliseconds = 200;
+    public final static int elbowReadyForDockUndock = 150;
+    public final static int wristUpright = 0;
+    public final static double wristDocking = 0.5;
+    public final static double wristPickup = 0.9;
+    public final static long wristMoveMilliseconds = 1000;
 
     public final static int elbowTolerance = 10;
     public final static int shoulderTolerance = 10;
@@ -27,8 +28,8 @@ public class CSConstants {
     public final static double shoulderPower = 0.5;
 
 //    public final static Pair<Double, Double> defaultFreePosition = new Pair<Double, Double>(0.4, 0.3);
-    public final static int shoulderDefaultFreePosition = 100;
-    public final static int elbowDefaultFreePosition = 100;
+    public final static int shoulderDefaultFreePosition = 400;
+    public final static int elbowDefaultFreePosition = 400;
 
     public final static int elbowAdjustmentSize = 100;
 
@@ -37,10 +38,10 @@ public class CSConstants {
 
     public final static double leftFingerOpenPosition = 0;
     public final static double rightFingerOpenPosition = 0;
-    public final static double leftFingerClosedPosition = 0;
-    public final static double rightFingerClosedPosition = 0;
+    public final static double leftFingerClosedPosition = 1;
+    public final static double rightFingerClosedPosition = 1;
 
-    public final static double endgameRuntimeSeconds = 2.0;
+    public final static double endgameRuntimeSeconds = 1;
 
 
 }

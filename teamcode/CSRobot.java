@@ -51,7 +51,7 @@ public class CSRobot {
 
     double wristPosition = 0;
 
-    private enum armStates {DOCKED, DOCKING2, DOCKING1, FREE, UNDOCKING}
+    private enum armStates {DOCKED, DOCKING2, DOCKING1, FREE, UNDOCKING, UNDOCKING2}
 
     private armStates armState = armStates.DOCKED;
 
@@ -83,6 +83,10 @@ public class CSRobot {
 
         shoulder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         elbow.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        shoulder.setDirection(REVERSE);
+        elbow.setDirection(REVERSE);
+        wrist.setPosition(CSConstants.wristPickup);
     }
 
     public void openLeftFinger() {
@@ -137,7 +141,7 @@ public class CSRobot {
         //start moving shoulder and elbow up, transition to undocking state
         moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
-        wrist.setPosition(CSConstants.wristUpright);
+//        wrist.setPosition(CSConstants.wristUpright);
         armState = armStates.DOCKING1;
     }
 
@@ -154,19 +158,30 @@ public class CSRobot {
     }
 
 
-    public void armStateMachine() {
+    public void doArmStateMachine() {
         switch (armState) {
             case DOCKED:
                 //allow the user to load pixels
                 break;
             case UNDOCKING:
+
                 if (isAtDestination(elbow) && isAtDestination(shoulder)) {
-                    armState = armStates.FREE;
+                    telemetry.addData("Undocking", "Undocking2");
+                    armState = armStates.UNDOCKING2;
+                    wrist.setPosition(CSConstants.wristDocking);
+                    wristStartedMoving = System.currentTimeMillis();
+
+                } else {
+                    telemetry.addData("Undocking", "pending");
+                }
+                break;
+            case UNDOCKING2:
+                telemetry.addData("Undocking", "Undocking2");
+                if (System.currentTimeMillis() - wristStartedMoving > CSConstants.wristMoveMilliseconds) {
                     moveMotor(shoulder, CSConstants.shoulderDefaultFreePosition, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
                     moveMotor(elbow, CSConstants.elbowDefaultFreePosition, CSConstants.elbowPower, CSConstants.elbowTolerance);
-                    wrist.setPosition(CSConstants.wristUpright);
+                    armState = armStates.FREE;
                 }
-
                 //if shoulder and elbow are up far enough, transition to free
                 break;
             case FREE:

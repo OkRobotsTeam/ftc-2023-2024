@@ -52,10 +52,15 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
+        telemetry.update();
 
         waitForStart();
+        telemetry.addData("Status", "Started");
+        telemetry.update();
 
         while (opModeIsActive()) {
+            telemetry.addData("Status", "Looping");
+
             standardMecanumControls();
             if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.a)) {
                 robot.startDockingArm();
@@ -88,15 +93,15 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
                 robot.deployEndgame();
             }
             // Process endgame firing
+            robot.doArmStateMachine();
             robot.endgameTick();
 
             telemetry.addData("Shoulder", robot.getShoulderPosition());
             telemetry.addData("Elbow", robot.getElbowPosition());
             telemetry.addData("Wrist", robot.getWristPosition());
             telemetry.addData("ArmState", robot.getArmState());
-            telemetry.addData("IMU_Z", mecanumDrive.getOrientation().firstAngle);
-            telemetry.addData("IMU_Y", mecanumDrive.getOrientation().secondAngle);
-            telemetry.addData("IMU_X", mecanumDrive.getOrientation().thirdAngle);
+            telemetry.update();
+
         }
     }
 
