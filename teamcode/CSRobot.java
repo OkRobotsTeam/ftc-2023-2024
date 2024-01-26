@@ -40,6 +40,8 @@ public class CSRobot {
 
     private DcMotorEx shoulder = null;
     private DcMotorEx elbow = null;
+    private DcMotorEx flippers = null;
+    private DcMotorEx belts = null;
 
     private Servo wrist = null;
     private Servo leftFinger = null;
@@ -51,7 +53,8 @@ public class CSRobot {
 
     double wristPosition = 0;
 
-    private enum armStates {DOCKED, DOCKING2, DOCKING1, FREE, UNDOCKING, UNDOCKING2}
+
+    private enum armStates {DOCKED, DOCKING2, DOCKING1, FREE, UNDOCKING, DOCKING3, UNDOCKING2}
 
     private armStates armState = armStates.DOCKED;
 
@@ -75,6 +78,9 @@ public class CSRobot {
         telemetry = telemetryIn;
         shoulder = hardwareMap.get(DcMotorEx.class, "shoulder");
         elbow = hardwareMap.get(DcMotorEx.class, "elbow");
+
+        flippers = hardwareMap.get(DcMotorEx.class, "intake");
+        belts = hardwareMap.get(DcMotorEx.class, "belts");
 
         wrist = hardwareMap.get(Servo.class, "wrist");
         leftFinger = hardwareMap.get(Servo.class, "left_finger");
@@ -105,6 +111,21 @@ public class CSRobot {
         rightFinger.setPosition(CSConstants.rightFingerClosedPosition);
     }
 
+    public void runIntakeForward(){
+        flippers.setPower(CSConstants.flipperPower);
+        belts.setPower(CSConstants.beltPower);
+    }
+
+    public void runIntakeReverse(){
+        flippers.setPower(-CSConstants.flipperPower);
+        belts.setPower(-CSConstants.beltPower);
+    }
+
+    public void stopIntake(){
+        flippers.setPower(0);
+        belts.setPower(0);
+    }
+
     public armStates getArmState() {
         return armState;
     }
@@ -131,7 +152,9 @@ public class CSRobot {
         motor.setPower(power);
         motor.setTargetPositionTolerance(tolerance);
     }
-
+    public boolean servoDone() {
+        return (System.currentTimeMillis() - wristStartedMoving > CSConstants.wristMoveMilliseconds);
+    }
     public void startDockingArm() {
         if (armState != armStates.FREE) {
             //only works in FREE state
@@ -141,7 +164,8 @@ public class CSRobot {
         //start moving shoulder and elbow up, transition to undocking state
         moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
-//        wrist.setPosition(CSConstants.wristUpright);
+        wrist.setPosition(CSConstants.wristDocking);
+        wristStartedMoving = System.currentTimeMillis();
         armState = armStates.DOCKING1;
     }
 
@@ -154,6 +178,7 @@ public class CSRobot {
         //start moving shoulder and elbow down, transition to docking1 state
         moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
+
         armState = armStates.UNDOCKING;
     }
 
@@ -188,19 +213,26 @@ public class CSRobot {
                 //allow user to set arm position
                 break;
             case DOCKING1:
-                if (isAtDestination(elbow) && isAtDestination(shoulder)) {
-                    armState = armStates.DOCKING2;
-                    wrist.setPosition(CSConstants.wristDocking);
-                    wristStartedMoving = System.currentTimeMillis();
+                if (isAtDestination(elbow) && isAtDestination(shoulder) && servoDone()) {
+                    //DOCKING2 Done, Transition to DOCKING3
+                    wrist.setPosition(CSConstants.wristPickup);
+                    armState=armStates.DOCKING2;
+                    wristStartedMoving=System.currentTimeMillis();
+
                 }
                 //if shoulder and elbow are down far enough, start moving wrist to docking position, transition to ready to dock
                 break;
+
+
             case DOCKING2:
-                if (System.currentTimeMillis() - wristStartedMoving > CSConstants.wristMoveMilliseconds) {
+                if (servoDone()) {
+                    //DOCKING3 Done, Transition to DOCKED
                     moveMotor(shoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
-                    moveMotor(elbow, CSConstants.elbowDocked, CSConstants.elbowPower, CSConstants.elbowTolerance);                }
-                //if enough time has passed for wrist to move, start dropping shoulder and elbow all the way down, transition to docked
-                break;
+                    moveMotor(elbow, CSConstants.elbowDocked, CSConstants.elbowPower, CSConstants.elbowTolerance);
+                    //if enough time has passed for wrist to move, start dropping shoulder and elbow all the way down, transition to docked
+                    armState=armStates.DOCKED;
+                    break;
+                }
         }
     }
 

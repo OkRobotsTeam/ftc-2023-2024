@@ -20,7 +20,7 @@ public class CSConstants {
     public final static int wristUpright = 0;
     public final static double wristDocking = 0.5;
     public final static double wristPickup = 0.9;
-    public final static long wristMoveMilliseconds = 1000;
+    public final static long wristMoveMilliseconds = 500;
 
     public final static int elbowTolerance = 10;
     public final static int shoulderTolerance = 10;
@@ -36,12 +36,15 @@ public class CSConstants {
     public final static int shoulderDocked = 0;
     public final static int elbowDocked = 0;
 
-    public final static double leftFingerOpenPosition = 0;
-    public final static double rightFingerOpenPosition = 0;
-    public final static double leftFingerClosedPosition = 1;
+    public final static double leftFingerOpenPosition = 1;
+    public final static double rightFingerOpenPosition = 0.5;
+    public final static double leftFingerClosedPosition = 0;
     public final static double rightFingerClosedPosition = 1;
 
     public final static double endgameRuntimeSeconds = 1;
 
+    public final static double flipperPower = 1;
+
+    public final static double beltPower = 1;
 
 }
