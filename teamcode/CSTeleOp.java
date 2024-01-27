@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback {
 
-
+    private int armPosition;
     private final MecanumDrive mecanumDrive = new MecanumDrive();
 
     private final CSRobot robot = new CSRobot();
@@ -44,6 +44,7 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
 
     @Override
     public void runOpMode() {
+        armPosition=0;
         robot.init(hardwareMap, telemetry, this);
         mecanumDrive.init(hardwareMap, telemetry, this);
         robot.setDrivetrainMotorDirections(mecanumDrive);
@@ -67,14 +68,13 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
 
             } else if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.b)) {
                 robot.startUndockingArm();
-
             }
 
-            // Handle manual elbow update
-            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_up)) {
-                robot.elbowUp();
-            } else if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_down)) {
-                robot.elbowDown();
+            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_down) ) {
+                robot.armDown();
+            }
+            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_up) ) {
+                robot.armUp();
             }
 
             // Handle opening and closing the fingers
@@ -90,12 +90,10 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
             }
 
             //Intake Controls
-            if (gamepad2.dpad_up) {
-                robot.runIntakeForward();
-            } else if (gamepad2.dpad_down) {
+            if (gamepad2.right_trigger > 0.3) {
                 robot.runIntakeReverse();
             } else {
-                robot.stopIntake();
+                robot.runIntakeForward(gamepad2.left_trigger);
             }
 
             if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.x)) {

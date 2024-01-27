@@ -42,7 +42,6 @@ public class JustMecanum extends LinearOpMode {
     @Override
     public void runOpMode() {
         mecanumDrive.init(hardwareMap, telemetry, this);
-        mecanumDrive.(FORWARD, REVERSE, REVERSE, FORWARD);
 
 
         //capstone = hardwareMap.get(Servo.class, "capstone");

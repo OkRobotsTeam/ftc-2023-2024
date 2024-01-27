@@ -19,7 +19,7 @@
  * SOFTWARE.
  */
 
-package org.firstinspires.ftc.old_teamcode;
+package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.CSConstants;
 import org.opencv.core.Core;
@@ -28,7 +28,6 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
@@ -56,7 +55,7 @@ class PropDetection extends OpenCvPipeline
 
 //        Mat leftCropZone = blurredImage.submat();
 
-                Imgproc.cvtColor(blurredImage, thresholded, Imgproc.COLOR_BGR2HLS);
+        Imgproc.cvtColor(blurredImage, thresholded, Imgproc.COLOR_BGR2HLS);
 
         Core.inRange(thresholded, new Scalar(CSConstants.hueRange[0], CSConstants.luminanceRange[0], CSConstants.saturationRange[0]),
                                   new Scalar(CSConstants.hueRange[1], CSConstants.luminanceRange[1], CSConstants.saturationRange[1]), thresholded);
