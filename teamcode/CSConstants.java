@@ -29,6 +29,13 @@ public class CSConstants {
 
     public final static int elbowAdjustmentSize = 100;
 
+    public final static int[][] armPositions = {
+            // 0,    1,    2,    3,   4,   5,   6,    7,    8,    9,   10
+            {  0,  1200,  950,  883, 883, 883, 952,  1044,  1209, 1000, 1100},   //shoulder
+            {  0,  326,  409,  558, 634, 798, 1048, 1261, 1594, 1500, 1700} }; //elbow
+    public final static double[] wristPositions =
+            //  0,    1,    2,    3,   4,   5,   6,   7,   8,   9,  10
+            {0.35, 0.35, 0.40, 0.45,0.50,0.55,0.65,0.70,0.75,0.75,0.75};
     public final static int shoulderDocked = 0;
     public final static int elbowDocked = 0;
 
@@ -42,5 +49,7 @@ public class CSConstants {
     public final static double flipperPower = 1;
 
     public final static double beltPower = 1;
+
+
 
 }

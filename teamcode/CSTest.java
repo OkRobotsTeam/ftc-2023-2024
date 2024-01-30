@@ -32,9 +32,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "CS TeleOp", group = "TeleOp")
+@TeleOp(name = "CS Test", group = "TeleOp")
 
-public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback {
+public class CSTest extends LinearOpMode implements MecanumDrive.TickCallback {
 
     private int armPosition;
     private final MecanumDrive mecanumDrive = new MecanumDrive();
@@ -63,19 +63,7 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
             telemetry.addData("Status", "Looping");
 
             standardMecanumControls();
-            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.a)) {
-                robot.startDockingArm();
 
-            } else if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.b)) {
-                robot.startUndockingArm();
-            }
-
-            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_down) ) {
-                robot.armDown();
-            }
-            if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.dpad_up) ) {
-                robot.armUp();
-            }
 
             // Handle opening and closing the fingers
             if (gamepad2.left_bumper) {
@@ -102,7 +90,8 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
             // Process endgame firing
             robot.doArmStateMachine();
             robot.endgameTick();
-
+            robot.elbow.setPower(0);
+            robot.shoulder.setPower(0);
             telemetry.addData("Shoulder", robot.getShoulderPosition());
             telemetry.addData("Elbow", robot.getElbowPosition());
             telemetry.addData("Wrist", robot.getWristPosition());

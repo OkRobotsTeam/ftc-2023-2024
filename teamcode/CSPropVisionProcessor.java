@@ -25,16 +25,20 @@ public class CSPropVisionProcessor implements VisionProcessor {
     private Mat hslImage = new Mat();
     private Mat thresholded = new Mat();
 
+    public int propLocation = 0;
+
     private final AtomicReference<ArrayList<MatOfPoint>> contours = new AtomicReference<>();
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
         // Code executed on the first frame dispatched into this VisionProcessor
+
     }
     
     @Override
     public Mat processFrame(Mat frame, long captureTimeNanos) {
         // Actual computer vision magic will happen here
+
         Imgproc.resize(frame, scaledImage, new Size(0,0), CSConstants.imageScalingFactor, CSConstants.imageScalingFactor, Imgproc.INTER_LINEAR);
 
         Imgproc.blur(scaledImage, blurredImage, new Size(CSConstants.imageBlurKernelSize, CSConstants.imageBlurKernelSize));
@@ -42,19 +46,16 @@ public class CSPropVisionProcessor implements VisionProcessor {
 
 //        Mat leftCropZone = blurredImage.submat();
 
-        Imgproc.cvtColor(blurredImage, thresholded, Imgproc.COLOR_BGR2HLS);
+        Mat hslThresholdOutput = new Mat();
+        double[] hue = {129.49640287769785, 180.0};
+        double[] lum = {89.43345323741006, 255.0};
+        double[] sat = {89.43345323741006, 255.0};
+        Imgproc.cvtColor(blurredImage, hslThresholdOutput, Imgproc.COLOR_BGR2HLS);
+        Core.inRange(hslThresholdOutput, new Scalar(hue[0], lum[0], sat[0]),
+                new Scalar(hue[1], lum[1], sat[1]), hslThresholdOutput);
 
-        Core.inRange(thresholded, new Scalar(CSConstants.hueRange[0], CSConstants.luminanceRange[0], CSConstants.saturationRange[0]),
-                new Scalar(CSConstants.hueRange[1], CSConstants.luminanceRange[1], CSConstants.saturationRange[1]), thresholded);
 
-//        A temporary array to store the contours before they are sent to the AtomicReference
-        ArrayList<MatOfPoint> temp_contours = new ArrayList<>() ;
-
-        Imgproc.findContours(thresholded, temp_contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        contours.set(temp_contours);
-
-        return thresholded;
+        return hslThresholdOutput;
     }
     
     @Override

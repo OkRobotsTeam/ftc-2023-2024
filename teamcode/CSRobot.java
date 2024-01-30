@@ -38,8 +38,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class CSRobot {
 
 
-    private DcMotorEx shoulder = null;
-    private DcMotorEx elbow = null;
+    public DcMotorEx shoulder = null;
+    public DcMotorEx elbow = null;
     private DcMotorEx flippers = null;
     private DcMotorEx belts = null;
 
@@ -52,10 +52,9 @@ public class CSRobot {
     private Telemetry telemetry = null;
 
     double wristPosition = 0;
-    int armPosition = 0;
+    public int armPosition = 0;
     int shoulderTarget = 0;
     int elbowTarget = 0;
-
 
     enum armStates {DOCKED, DOCKING2, DOCKING1, FREE, UNDOCKING, DOCKING3, UNDOCKING2}
 
@@ -158,13 +157,15 @@ public class CSRobot {
        }
        armPosition++;
 
-        if (armPosition > 10) {
-            armPosition = 10;
+        if (armPosition > 8) {
+            armPosition = 8;
         }
        moveArmTarget();
     }
     public void armDown() {
-        if (armPosition == 1) {
+        if (armPosition == 0) {
+            //Do nothing.  We are already docking.
+        } else if (armPosition == 1) {
             startDockingArm();
             armPosition = 0;
         } else {
@@ -172,19 +173,22 @@ public class CSRobot {
             if (armPosition < 0) {
                 armPosition = 0;
             }
+            moveArmTarget();
         }
-        moveArmTarget();
     }
 
     public void moveArmTarget() {
         //setShoulder and elbow target positions
-        shoulderTarget = (armPosition * 100) + CSConstants.shoulderDefaultFreePosition;
-        elbowTarget = (armPosition * 50) + CSConstants.elbowDefaultFreePosition;
+
+        shoulderTarget = CSConstants.armPositions[0][armPosition];
+        elbowTarget = CSConstants.armPositions[1][armPosition];
         if (armState == armStates.FREE) {
             //actually move the arm
+
             elbow.setTargetPosition(elbowTarget);
             shoulder.setTargetPosition(shoulderTarget);
         }
+        wrist.setPosition(CSConstants.wristPositions[armPosition]);
     }
 
 
@@ -206,7 +210,7 @@ public class CSRobot {
             //only works in FREE state
             return;
         }
-
+        armPosition=0;
         //start moving shoulder and elbow up, transition to undocking state
         moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
@@ -276,7 +280,7 @@ public class CSRobot {
                 if (servoDone()) {
                     //DOCKING3 Done, Transition to DOCKED
                     moveMotor(shoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
-                    moveMotor(elbow, CSConstants.elbowDocked, CSConstants.elbowPower, CSConstants.elbowTolerance);
+                    moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
                     //if enough time has passed for wrist to move, start dropping shoulder and elbow all the way down, transition to docked
                     armState=armStates.DOCKED;
                     break;
