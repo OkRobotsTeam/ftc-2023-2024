@@ -51,10 +51,14 @@ public class CSRobot {
     private long endgameDeployStartTime = -1;
     private Telemetry telemetry = null;
 
-    double wristPosition = 0;
+    double wristBasePosition = 0;
     public int armPosition = 0;
     int shoulderTarget = 0;
     int elbowTarget = 0;
+    int shoulderAdjust = 0;
+    int elbowAdjust = 0;
+    double wristAdjust = 0;
+
 
     enum armStates {DOCKED, DOCKING2, DOCKING1, FREE, UNDOCKING, DOCKING3, UNDOCKING2}
 
@@ -97,6 +101,7 @@ public class CSRobot {
         wrist.setPosition(CSConstants.wristPickup);
     }
 
+
     public void openLeftFinger() {
         leftFinger.setPosition(CSConstants.leftFingerOpenPosition);
     }
@@ -108,6 +113,32 @@ public class CSRobot {
     public void openRightFinger() {
         rightFinger.setPosition(CSConstants.rightFingerOpenPosition);
     }
+
+    public void elbowAdjustUp() {
+        elbowAdjust-=20;
+        moveArmTargetWithAdjustments();
+    }
+    public void elbowAdjustDown() {
+        elbowAdjust+=20;
+        moveArmTargetWithAdjustments();
+    }
+    public void shoulderAdjustOut() {
+        shoulderAdjust-=20;
+        moveArmTargetWithAdjustments();
+    }
+    public void shoulderAdjustBack() {
+        shoulderAdjust +=20;
+        moveArmTargetWithAdjustments();
+    }
+    public void wristAdjustUp(){
+        wristAdjust -=0.01;
+        setWristPositionWithAdjust();
+    }
+    public void wristAdjustDown() {
+        wristAdjust +=0.01;
+        setWristPositionWithAdjust();
+    }
+
 
     public void closeRightFinger() {
         rightFinger.setPosition(CSConstants.rightFingerClosedPosition);
@@ -154,12 +185,14 @@ public class CSRobot {
     public void armUp() {
        if (armPosition == 0) {
            startUndockingArm();
+       } else {
+           armPosition++;
        }
-       armPosition++;
 
-        if (armPosition > 8) {
-            armPosition = 8;
-        }
+       if (armPosition > CSConstants.numArmPositions) {
+            armPosition = CSConstants.numArmPositions;
+       }
+       resetAdjusts();
        moveArmTarget();
     }
     public void armDown() {
@@ -175,20 +208,24 @@ public class CSRobot {
             }
             moveArmTarget();
         }
+
     }
 
     public void moveArmTarget() {
         //setShoulder and elbow target positions
+        resetAdjusts();
+        moveArmTargetWithAdjustments();
+    }
 
+    public void moveArmTargetWithAdjustments() {
         shoulderTarget = CSConstants.armPositions[0][armPosition];
         elbowTarget = CSConstants.armPositions[1][armPosition];
         if (armState == armStates.FREE) {
-            //actually move the arm
-
-            elbow.setTargetPosition(elbowTarget);
-            shoulder.setTargetPosition(shoulderTarget);
+            elbow.setTargetPosition(elbowTarget+elbowAdjust);
+            shoulder.setTargetPosition(shoulderTarget+shoulderAdjust);
+            wristBasePosition = CSConstants.wristPositions[armPosition];
+            wrist.setPosition(wristBasePosition + wristAdjust);
         }
-        wrist.setPosition(CSConstants.wristPositions[armPosition]);
     }
 
 
@@ -211,12 +248,19 @@ public class CSRobot {
             return;
         }
         armPosition=0;
+        shoulderAdjust=0;
         //start moving shoulder and elbow up, transition to undocking state
         moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
         wrist.setPosition(CSConstants.wristDocking);
         wristStartedMoving = System.currentTimeMillis();
         armState = armStates.DOCKING1;
+    }
+
+    public void resetAdjusts() {
+        elbowAdjust=0;
+        shoulderAdjust=0;
+        wristAdjust=0;
     }
 
     public void startUndockingArm() {
@@ -230,6 +274,7 @@ public class CSRobot {
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
 
         armState = armStates.UNDOCKING;
+        armPosition = 1;
     }
 
 
@@ -296,9 +341,19 @@ public class CSRobot {
         shoulder.setTargetPosition(shoulderPositionIn);
         elbow.setTargetPosition(elbowPositionIn);
         wrist.setPosition(wristPositionIn);
-        wristPosition = wristPositionIn;
+        wristBasePosition = wristPositionIn;
     }
 
+    public void setWristBasePosition(double positionIn) {
+        wristBasePosition = positionIn;
+        wristAdjust = 0;
+        wrist.setPosition(wristBasePosition);
+    }
+
+    public void setWristPositionWithAdjust() {
+        if (armState != armStates.FREE) {return;}
+        wrist.setPosition(wristBasePosition + wristAdjust);
+    }
     public double getShoulderPosition() {
         return shoulder.getCurrentPosition();
     }
@@ -308,7 +363,7 @@ public class CSRobot {
     }
 
     public double getWristPosition() {
-        return wristPosition;
+        return wristBasePosition+wristAdjust;
     }
 
     public void setDrivetrainMotorDirections(MecanumDrive mecanumDrive) {

@@ -62,7 +62,22 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
         while (opModeIsActive()) {
             telemetry.addData("Status", "Looping");
 
-            standardMecanumControls();
+            if (gamepad2.right_stick_y > 0.3) {
+                robot.elbowAdjustUp();
+            } else if (gamepad2.right_stick_y < -0.3) {
+                robot.elbowAdjustDown();
+            }
+            if (gamepad2.left_stick_y > 0.3) {
+                robot.shoulderAdjustOut();
+            } else if (gamepad2.left_stick_y < -0.3) {
+                robot.shoulderAdjustBack();
+            }
+            if (gamepad2.right_stick_x > 0.3) {
+                robot.wristAdjustUp();
+            } else if (gamepad2.right_stick_x < -0.3) {
+                robot.wristAdjustDown();
+            }
+
             if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.a)) {
                 robot.startDockingArm();
 
@@ -101,6 +116,7 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
             }
             // Process endgame firing
             robot.doArmStateMachine();
+            standardMecanumControls();
             robot.endgameTick();
 
             telemetry.addData("Shoulder", robot.getShoulderPosition());
@@ -109,15 +125,15 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
             telemetry.addData("ArmState", robot.getArmState());
             telemetry.addData("ArmPosition" , robot.armPosition);
             telemetry.update();
-
+            mecanumDrive.tickSleep();
         }
     }
 
     public void standardMecanumControls() {
-        double speed = (gamepad1.right_trigger * 0.5) + 0.5;
-        double fwd = addDeadZone(gamepad1.left_stick_y) * speed;
-        double rot = addDeadZone(gamepad1.right_stick_x) * speed;
-        double strafe = addDeadZone(gamepad1.left_stick_x);
+        double speed = (gamepad1.right_trigger * 0.6) + 0.4;
+        double fwd = addDeadZoneAndCurves(gamepad1.left_stick_y) * speed;
+        double rot = addDeadZoneAndCurves(gamepad1.right_stick_x) * speed;
+        double strafe = addDeadZoneAndCurves(gamepad1.left_stick_x);
         strafe = strafe * speed * 1.6;
 
         if (strafe > 1) {
@@ -128,6 +144,14 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
         mecanumDrive.setMotors(strafe, fwd, rot, 1);
     }
 
+    double addDeadZoneAndCurves(double input) {
+        input = addDeadZone(input);
+        //60% of the output is the input squared to make a curve
+        double output = input * Math.abs(input) * 0.6;
+        //40% of the output is linear
+        output = output + input * 0.4;
+        return output;
+    }
 
     double addDeadZone(double input) {
         if (Math.abs(input) < 0.1) {

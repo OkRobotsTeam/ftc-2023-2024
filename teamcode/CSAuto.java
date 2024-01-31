@@ -29,8 +29,14 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 
 @Autonomous(name = "CSAuto", group = "Autonomous")
@@ -47,6 +53,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
     private enum ScoringDirection {SCORE_LEFT, SCORE_RIGHT}
     private ScoringDirection scoringDirection = ScoringDirection.SCORE_LEFT;
     private int path = 0;
+    private CSPropVisionProcessor visionProcessor = new CSPropVisionProcessor();
 
     @Override
     public void runOpMode() {
@@ -57,18 +64,61 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
 
         robot.setDrivetrainMotorDirections(mecanumDrive);
         mecanumDrive.setupTickCallback(this);
-
+        boolean allianceSelected = false;
         // Tell the driver that initialization is complete.
-        telemetry.addData("Status", "Initialized");
+        VisionPortal visionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .addProcessor(visionProcessor)
+                .setCameraResolution(new Size(424, 240))
+                .setStreamFormat(VisionPortal.StreamFormat.YUY2)
+                .enableLiveView(true)
+                .setAutoStopLiveView(true)
+                .build();
 
-        waitForStart();
-        mecanumDrive.forward(26, 0.5);
+        while (opModeInInit()) {
+            if (gamepad1.right_bumper) {
+                visionProcessor.setAlliance(CSPropVisionProcessor.Alliance.RED);
+                allianceSelected=true;
+            } else if (gamepad1.left_bumper) {
+                visionProcessor.setAlliance(CSPropVisionProcessor.Alliance.BLUE);
+                allianceSelected=true;
+            }
+            if (!allianceSelected) {
+                telemetry.addLine("-------------------------------------");
+                telemetry.addLine("|        SELECT ALLIANCE NOW!        |");
+                telemetry.addLine("-------------------------------------");
+                telemetry.addLine("|      NO NOT LATER!  DO IT NOW!     |");
+                telemetry.addLine("-------------------------------------");
+                telemetry.addLine("Driver controller bumpers set alliance");
+                telemetry.setDisplayFormat(Telemetry.DisplayFormat.MONOSPACE);
+            } else {
+                telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
+                if (visionProcessor.getAlliance() == CSPropVisionProcessor.Alliance.RED) {
+                    telemetry.addLine("<p style=\"text-align:center; background-color:red;\"><big><big><big><b><tt>--RED--</tt></b></big></big></big></p>");
+                } else {
+                    telemetry.addLine("<p style=\"text-align:center; background-color:blue;\"><big><big><big><b><tt>--BLUE--</tt></b></big></big></big></p>");
+                }
+                telemetry.addData("Camera resolution", visionProcessor.getWidth()+ "x"+ visionProcessor.getHeight());
+                telemetry.addData("Prop Zone Detected", visionProcessor.getDetectedPropZone());
+            }
+            telemetry.update();
+            sleep(50);
+        }
+
+
+        visionPortal.close();
+
+        //Quit now if stop button was pressed instead of play.
+        if (!opModeIsActive()) { return;}
+
+        path=visionProcessor.detectedPropZone;
+        mecanumDrive.forward(12, 0.5);
         if (path == 1) {
             mecanumDrive.leftTurn(90, 0.5);
-            mecanumDrive.forward(24, 0.5);
+            mecanumDrive.forward(12, 0.5);
         } else if (path == 3) {
             mecanumDrive.rightTurn(90, 0.5);
-            mecanumDrive.forward(24, 0.5);
+            mecanumDrive.forward(12, 0.5);
         }
 
         while (opModeIsActive()) {
