@@ -106,9 +106,11 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
 
             //Intake Controls
             if (gamepad2.right_trigger > 0.3) {
+                robot.runIntakeForward();
+            } else if (gamepad2.left_trigger > 0.3) {
                 robot.runIntakeReverse();
             } else {
-                robot.runIntakeForward(gamepad2.left_trigger);
+                robot.stopIntake();
             }
 
             if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.x)) {

@@ -13,10 +13,10 @@ public class CSConstants {
     public final static double arm_encoder_counts_per_revolution = 3895.9;
 
     // Dock/Undock values for shoulder, elbow, and wrist
-    public final static int shoulderReadyForDockUndock = 000;
+    public final static int shoulderReadyForDockUndock = 0;
     public final static int elbowReadyForDockUndock = 150;
     public final static double wristDocking = 0.5;
-    public final static double wristPickup = 0.9;
+    public final static double wristPickup = 0.95;
     public final static long wristMoveMilliseconds = 500;
 
     public final static int elbowTolerance = 10;
@@ -29,15 +29,15 @@ public class CSConstants {
 
     public final static int elbowAdjustmentSize = 100;
 
-    public static int numArmPositions = 6;
+    public static int numArmPositions = 4;
 
     public final static int[][] armPositions = {
-            // 0,    1,    2,    3,   4,   5,   6
-            {  0,    0,  1070,  850, 830, 930, 1050},   //shoulder
-            {  0,  370,  330,  520, 720, 1100, 1580} }; //elbow
+            // 0,    1,    2,    3,   4
+            {  0,    0,  990,  969, 1130}, //shoulder
+            {  0,  370,  671,  1170, 1651} }; //elbow
     public final static double[] wristPositions =
-            //  0,    1,    2,    3,   4,   5,   6
-            {0.35, 0.50, 0.32, 0.44,0.53,0.55,0.65};
+            //  0,    1,    2,    3,   4
+            {0.35, 0.50, 0.41, 0.56,0.68};
     public final static int shoulderDocked = 0;
     public final static int elbowDocked = 0;
 

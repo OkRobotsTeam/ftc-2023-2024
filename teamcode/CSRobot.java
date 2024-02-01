@@ -107,6 +107,9 @@ public class CSRobot {
     }
 
     public void closeLeftFinger() {
+        if (armState == armStates.DOCKED) {
+            return;  // Can't close fingers while docked
+        }
         leftFinger.setPosition(CSConstants.leftFingerClosedPosition);
     }
 
@@ -114,6 +117,12 @@ public class CSRobot {
         rightFinger.setPosition(CSConstants.rightFingerOpenPosition);
     }
 
+    public void closeRightFinger() {
+        if (armState == armStates.DOCKED) {
+            return;  // Can't close fingers while docked
+        }
+        rightFinger.setPosition(CSConstants.rightFingerClosedPosition);
+    }
     public void elbowAdjustUp() {
         elbowAdjust-=20;
         moveArmTargetWithAdjustments();
@@ -134,15 +143,12 @@ public class CSRobot {
         wristAdjust -=0.01;
         setWristPositionWithAdjust();
     }
+
     public void wristAdjustDown() {
         wristAdjust +=0.01;
         setWristPositionWithAdjust();
     }
 
-
-    public void closeRightFinger() {
-        rightFinger.setPosition(CSConstants.rightFingerClosedPosition);
-    }
 
     public void runIntakeForward(){
         flippers.setPower(CSConstants.flipperPower);
