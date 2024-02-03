@@ -35,6 +35,7 @@ public class CSPropVisionProcessor implements VisionProcessor {
     Mat mask = new Mat();
     Mat tempMask = new Mat();
     Mat hsvFrame = new Mat();
+    Mat blurred = new Mat();
 
     //x,y coordinates of the corners of the 3 zones.
     Point left1;
@@ -100,8 +101,8 @@ public class CSPropVisionProcessor implements VisionProcessor {
     public Object processFrame(Mat frame, long captureTimeNanos) {
         Imgproc.resize(frame, frame, new Size(width,height), 0, 0, Imgproc.INTER_LINEAR);
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2BGR);
-        Imgproc.blur(frame, frame, new Size(CSConstants.imageBlurKernelSize, CSConstants.imageBlurKernelSize));
-        Imgproc.cvtColor(frame, hsvFrame, Imgproc.COLOR_BGR2HSV);
+        Imgproc.blur(frame, blurred, new Size(CSConstants.imageBlurKernelSize, CSConstants.imageBlurKernelSize));
+        Imgproc.cvtColor(blurred, hsvFrame, Imgproc.COLOR_BGR2HSV);
         if (alliance == Alliance.RED) {
             Core.inRange(hsvFrame, new Scalar(170, 70, 50), new Scalar(180, 255, 255), mask);
         } else {

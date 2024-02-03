@@ -2,6 +2,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -50,8 +51,8 @@ public class MecanumDrive {
 
 
 
-    private long countPerInch = 40;
-    private long countPerInchStrafing = 60;
+    public long countPerInch = 40;
+    public long countPerInchStrafing = 0;
 
     public long getCountPerInch() {
         return countPerInch;
@@ -64,7 +65,7 @@ public class MecanumDrive {
         this.countPerInch = countPerInch;
     }
     
-    public double countPerDegree = 8.9;
+    public double countPerDegree = 12;
     public boolean debugMode = false;
 
 
@@ -204,6 +205,7 @@ public class MecanumDrive {
 
 
     }
+
     void setMotors(double x, double y, double rot, double slowdownFactor) {
         double theta = Math.atan2(x, y) - Math.PI / 4;  //finds the angle of the joystick and turns it by pi/4 radians or 45 degrees
         rot = 1 * rot;  //scales rotation factor

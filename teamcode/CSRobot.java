@@ -35,7 +35,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-public class CSRobot {
+public class CSRobot  {
 
 
     public DcMotorEx shoulder = null;
@@ -101,7 +101,9 @@ public class CSRobot {
         wrist.setPosition(CSConstants.wristPickup);
     }
 
-
+    public void setArmFree() {
+        armState= armStates.FREE;
+    }
     public void openLeftFinger() {
         leftFinger.setPosition(CSConstants.leftFingerOpenPosition);
     }
@@ -235,6 +237,7 @@ public class CSRobot {
     }
 
 
+
     public boolean isAtDestination(DcMotorEx motor) {
         return Math.abs(motor.getCurrentPosition() - motor.getTargetPosition()) <= motor.getTargetPositionTolerance();
     }
@@ -263,6 +266,9 @@ public class CSRobot {
         armState = armStates.DOCKING1;
     }
 
+    public void adjustElbow(int elbowAdjustmentIn) {
+        moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
+    }
     public void resetAdjusts() {
         elbowAdjust=0;
         shoulderAdjust=0;
@@ -334,9 +340,18 @@ public class CSRobot {
                     moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
                     //if enough time has passed for wrist to move, start dropping shoulder and elbow all the way down, transition to docked
                     armState=armStates.DOCKED;
+                    openLeftFinger();
+                    openRightFinger();
                     break;
                 }
         }
+    }
+
+    public void doArmLift() {
+        shoulder.setTargetPosition(CSConstants.shoulderDefaultFreePosition);
+        elbow.setTargetPosition(CSConstants.elbowDefaultFreePosition);
+        elbow.setPower(1);
+        shoulder.setPower(1);
     }
 
     public void moveArm(int shoulderPositionIn, int elbowPositionIn, double wristPositionIn) {
@@ -367,6 +382,9 @@ public class CSRobot {
     public double getElbowPosition() {
         return elbow.getCurrentPosition();
     }
+
+
+    public int getShoulderTargetPosition() { return shoulder.getTargetPosition(); }
 
     public double getWristPosition() {
         return wristBasePosition+wristAdjust;

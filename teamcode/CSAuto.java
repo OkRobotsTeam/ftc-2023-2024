@@ -58,12 +58,15 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
     @Override
     public void runOpMode() {
 
+
         robot.init(hardwareMap, telemetry, this);
         mecanumDrive.init(hardwareMap, telemetry, this);
-        mecanumDrive.setCountPerDegree(7);
+        mecanumDrive.setCountPerDegree(8);
+        mecanumDrive.setCountPerInch(40);
+
+        //mecanumDrive.setupTickCallback(this);
 
         robot.setDrivetrainMotorDirections(mecanumDrive);
-        mecanumDrive.setupTickCallback(this);
         boolean allianceSelected = false;
         // Tell the driver that initialization is complete.
         VisionPortal visionPortal = new VisionPortal.Builder()
@@ -75,6 +78,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
                 .setAutoStopLiveView(true)
                 .build();
 
+        ButtonPressDetector pad1pressDetector = new ButtonPressDetector(gamepad1);
         while (opModeInInit()) {
             if (gamepad1.right_bumper) {
                 visionProcessor.setAlliance(CSPropVisionProcessor.Alliance.RED);
@@ -98,35 +102,91 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
                 } else {
                     telemetry.addLine("<p style=\"text-align:center; background-color:blue;\"><big><big><big><b><tt>--BLUE--</tt></b></big></big></big></p>");
                 }
-                telemetry.addData("Camera resolution", visionProcessor.getWidth()+ "x"+ visionProcessor.getHeight());
+                //telemetry.addData("Camera resolution", visionProcessor.getWidth()+ "x"+ visionProcessor.getHeight());
                 telemetry.addData("Prop Zone Detected", visionProcessor.getDetectedPropZone());
             }
             telemetry.update();
             sleep(50);
         }
 
+        if (!allianceSelected) {
+            visionProcessor.setAlliance(CSPropVisionProcessor.Alliance.RED);
+        }
 
         visionPortal.close();
 
         //Quit now if stop button was pressed instead of play.
         if (!opModeIsActive()) { return;}
 
-        path=visionProcessor.detectedPropZone;
-        mecanumDrive.forward(12, 0.5);
+        path=visionProcessor.getDetectedPropZone();
+
+        robot.setArmFree();
+        robot.closeLeftFinger();
+        robot.closeRightFinger();
+        //robot.adjustElbow( CSConstants.elbowReadyForDockUndock);
+        robot.moveMotor(robot.elbow, 100, CSConstants.elbowPower, CSConstants.elbowTolerance);
+
+
+        mecanumDrive.leftTurn(5,0.5);
+        mecanumDrive.backward(26, 0.5);
+        robot.setWristBasePosition(0.45);
+
         if (path == 1) {
-            mecanumDrive.leftTurn(90, 0.5);
-            mecanumDrive.forward(12, 0.5);
+            mecanumDrive.turnTo(90, 0.5);
+
         } else if (path == 3) {
-            mecanumDrive.rightTurn(90, 0.5);
-            mecanumDrive.forward(12, 0.5);
+            mecanumDrive.turnTo(-90, 0.4);
         }
+        mecanumDrive.forward(5,0.5);
+
+        robot.moveMotor(robot.elbow, 0, CSConstants.elbowPower, CSConstants.elbowTolerance);
+        while ( robot.elbow.isBusy() && opModeIsActive()) {
+            mecanumDrive.tickSleep();
+        }
+
+        robot.openRightFinger();
+        sleep(500);
+        mecanumDrive.backward(2,0.5);
+        mecanumDrive.forward(5,0.5);
+        mecanumDrive.turnTo(180, 0.5);
+        mecanumDrive.forward(12,0.5);
+        mecanumDrive.turnTo(90, 0.5);
+        if (path == 1) {
+            mecanumDrive.backward(12, 0.5);
+        } else if (path == 2) {
+            mecanumDrive.backward(12, 0.5);
+        } else {
+            mecanumDrive.backward(12, 0.5);
+        }
+
+
+        //end of auto
+
+        robot.startDockingArm();
 
         while (opModeIsActive()) {
             standardMecanumControls();
+            if (pad1pressDetector.wasPressed(ButtonPressDetector.Button.a)) {
+                robot.startDockingArm();
+            }
+            debugOutput();
+            robot.doArmStateMachine();
+            mecanumDrive.tickSleep();
+
         }
         mecanumDrive.tickSleep();
     }
 
+    public void debugOutput() {
+        telemetry.addData("Prop Zone Detected", visionProcessor.getDetectedPropZone());
+        telemetry.addData("Shoulder", robot.getShoulderPosition());
+        telemetry.addData("Elbow", robot.getElbowPosition());
+        telemetry.addData("Wrist", robot.getWristPosition());
+        telemetry.addData("ArmState", robot.getArmState());
+        telemetry.addData("ArmPosition" , robot.armPosition);
+        mecanumDrive.telemetryMotorPosition();
+        telemetry.update();
+    }
     public void standardMecanumControls() {
         double speed = (gamepad1.right_trigger * 0.5) + 0.5;
         double fwd = addDeadZone(gamepad1.left_stick_y) * speed;
@@ -143,6 +203,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
     }
 
     public void tickCallback() {
+       // robot.doArmStateMachine();
     }
 
     double addDeadZone(double input) {

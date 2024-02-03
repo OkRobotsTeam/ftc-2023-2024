@@ -113,6 +113,9 @@ public class CSTeleOp extends LinearOpMode implements MecanumDrive.TickCallback 
                 robot.stopIntake();
             }
 
+            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+                robot.doArmLift();
+            }
             if (pad2pressDetector.wasPressed(ButtonPressDetector.Button.x)) {
                 robot.deployEndgame();
             }
