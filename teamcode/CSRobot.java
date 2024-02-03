@@ -293,7 +293,11 @@ public class CSRobot  {
     public void doArmStateMachine() {
         switch (armState) {
             case DOCKED:
-                //allow the user to load pixels
+                moveMotor(shoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
+                if (belts.getPower() != 0) {
+                    wrist.setPosition(CSConstants.wristPickup + Math.sin(System.currentTimeMillis() / 50.0) * 0.02);
+                }
                 break;
             case UNDOCKING:
 
