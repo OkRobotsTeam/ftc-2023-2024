@@ -392,9 +392,16 @@ public class MecanumDrive {
                 if (direction == MoveDirection.BACKWARD) {
                     motorDirection = HPMC.Direction.REVERSE;
                 }
+                int i = 0;
                 for (HPMC motor : motors) {
-                    motor.smoothMoveSetup(distance, power, power * 25+2, power * 35+2, motorDirection, endStopped);
+                    if ((i == FL) || (i == BL)) {
+                        motor.smoothMoveSetup(distance * 1.3, power * 1.3, power * 25 + 2, power * 35 + 2, motorDirection, endStopped);
+                    } else {
+                        motor.smoothMoveSetup(distance, power, power * 25 + 2, power * 35 + 2, motorDirection, endStopped);
+                    }
+                    i++;
                 }
+
                 break;
             case LEFT:
             case RIGHT:
@@ -406,11 +413,11 @@ public class MecanumDrive {
                 } else {
                     FR_Direction = HPMC.Direction.REVERSE;
                 }
-                for (int i : new int[]{FL, BR}) {
-                    motors[i].smoothMoveSetup(distance, power, power * 10+2, power * 15+2, FL_Direction, endStopped);
+                for (int j : new int[]{FL, BR}) {
+                    motors[j].smoothMoveSetup(distance, power, power * 10+2, power * 15+2, FL_Direction, endStopped);
                 }
-                for (int i : new int[]{FR, BL}) {
-                    motors[i].smoothMoveSetup(distance, power, power * 10*2, power * 15+2, FR_Direction, endStopped);
+                for (int j : new int[]{FR, BL}) {
+                    motors[j].smoothMoveSetup(distance, power, power * 10*2, power * 15+2, FR_Direction, endStopped);
                 }
                 break;
         }
