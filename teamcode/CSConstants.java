@@ -1,7 +1,43 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+
 public class CSConstants {
+    public static class Sensors {
+        public final static String IMU = "imu";
+        // Axes order for the IMU, the first axis will be used (Z in the case of AxesOrder.ZYX)
+        public final static AxesOrder IMUAxesOrder = AxesOrder.ZYX;
+        public final static AxesReference IMUAxesReference = AxesReference.INTRINSIC;
+
+    }
+
+    public static class Drivetrain {
+        public final static String frontLeft = "left_front";
+        public final static String backLeft = "left_back";
+        public final static String frontRight = "right_front";
+        public final static String backRight = "right_back";
+
+        public final static double wheelDiameterIn = 4.0;
+        public final static double wheelCircumferenceIn = wheelDiameterIn * Math.PI;
+        public final static double encoderCountsPerRevolution = 28;  // HD Hex motor encoders have a resolution of 28 counts per revolution at the motor
+        public final static double motorGearRatio = 20.0;  // A gear ratio of 20:1 (input:output)
+        public final static double encoderOutputCountsPerRevolution = encoderCountsPerRevolution * motorGearRatio;
+        public final static double encoderCountsPerIn = encoderOutputCountsPerRevolution / wheelCircumferenceIn;
+
+
+        // PID parameters
+        public final static double drivetrainTurningKp = 1;
+        public final static double drivetrainTurningKi = 0;
+        public final static double drivetrainTurningKd = 0;
+        public final static double drivetrainTurningIntegralLimit = 1;
+        public final static double drivetrainTurningTimeStep = 0.05;
+    }
+
+
+    public final static String IMUCalibrationFilename = "AdafruitIMUCalibration.json";
+
     public final static double imageScalingFactor = 0.25;
     public final static double imageBlurKernelSize = 9;
     public final static int imageWidth = 640;
@@ -33,11 +69,11 @@ public class CSConstants {
 
     public final static int[][] armPositions = {
             // 0,    1,    2,    3,   4
-            {  0,    0,  990,  969, 1130}, //shoulder
-            {  0,  370,  671,  1170, 1651} }; //elbow
+            {0, 0, 990, 969, 1130}, //shoulder
+            {0, 370, 671, 1170, 1651}}; //elbow
     public final static double[] wristPositions =
             //  0,    1,    2,    3,   4
-            {0.35, 0.50, 0.41, 0.56,0.68};
+            {0.35, 0.50, 0.41, 0.56, 0.68};
     public final static int shoulderDocked = 0;
     public final static int elbowDocked = 0;
 
