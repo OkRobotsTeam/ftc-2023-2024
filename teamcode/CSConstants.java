@@ -33,6 +33,13 @@ public class CSConstants {
         public final static double drivetrainTurningKd = 0;
         public final static double drivetrainTurningIntegralLimit = 1;
         public final static double drivetrainTurningTimeStep = 0.05;
+
+        public final static boolean isFieldCentricDuringTeleOp = false;
+        public final static double minimumMovementPower = 0.5;
+        public final static double maximumMovementPower = 1;
+
+        public final static double minimumTurnPower = 0.5;
+        public final static double maximumTurnPower = 1;
     }
 
 

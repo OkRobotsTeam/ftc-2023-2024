@@ -1,16 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.MathUtil.clamp;
+
 public class PIDController {
-    double kp;
-    double ki;
-    double kd;
-    double time_step;
+    // Tunings
+    double kp, ki, kd, time_step, integral_limit;
+
+    // State variables
     double previous_time;
-    double current_value;
-    double target_value;
-    double error_integral;
-    double error_derivative;
-    double integral_limit;
+    double current_value, target_value;
+    double error_integral, error_derivative;
     double previous_error;
     double control_output;
 
@@ -71,10 +70,6 @@ public class PIDController {
         error_integral = 0;
         control_output = 0;
         previous_error = target_value - current_value;
-    }
-
-    private double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
     }
 
     public double update(double measurement) {

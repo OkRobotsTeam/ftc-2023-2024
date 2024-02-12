@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
@@ -28,12 +31,25 @@ public class BetterMecanumDrive {
     // PID controller for rotation
     PIDController rotationPID = new PIDController(1, 0, 0, 0.05, 1);
 
-    // Constants for motor positions
+    // Telemetry
+    private Telemetry telemetry;
+
+    // Debugging
+    private boolean pauseBeforeEachMovement = false;
+    private LinearOpMode opMode;
+
+
+    // Constants for wheel positions
     private final int FRONT_LEFT = 0;
     private final int FRONT_RIGHT = 2;
     private final int BACK_LEFT = 1;
     private final int BACK_RIGHT = 3;
+
+    // An array of all the wheel positions for iteration
     private final int[] WHEEL_POSITIONS = {FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT};
+
+    // The directions in which each wheel applies force when spinning forward, in radians in counterclockwise-positive notation
+    private final double[] WHEEL_FORCE_DIRECTIONS_RAD = {0.78539816339, 2.35619449019, 2.35619449019, 0.78539816339};
 
     // State Variables
     private double[] encoderOffsets = {0.0, 0.0, 0.0, 0.0};
@@ -43,13 +59,15 @@ public class BetterMecanumDrive {
      *
      * @param hardwareMap Hardware map from the OpMode.
      */
-    BetterMecanumDrive(HardwareMap hardwareMap) {
+    public BetterMecanumDrive(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode opMode) {
         // Initialize motors
         motors[FRONT_LEFT] = hardwareMap.get(DcMotorEx.class, CSConstants.Drivetrain.frontLeft);
         motors[BACK_LEFT] = hardwareMap.get(DcMotorEx.class, CSConstants.Drivetrain.backLeft);
         motors[FRONT_RIGHT] = hardwareMap.get(DcMotorEx.class, CSConstants.Drivetrain.frontRight);
         motors[BACK_RIGHT] = hardwareMap.get(DcMotorEx.class, CSConstants.Drivetrain.backRight);
         setupIMU(hardwareMap);
+        this.telemetry = telemetry;
+        this.opMode = opMode;
     }
 
     /**
@@ -114,6 +132,27 @@ public class BetterMecanumDrive {
         }
     }
 
+    /**
+     * Set the directions of the motors for each wheel.
+     *
+     * @param directions Array of directions for each wheel to turn in order to go forward.
+     *                   The array length should be equal to the number of wheels.
+     */
+    void setMotorDirections(DcMotorSimple.Direction[] directions) {
+        // Iterate over each wheel position
+        for (int wheelPosition : WHEEL_POSITIONS) {
+            // Set the direction of the motor at the wheel position
+            motors[wheelPosition].setDirection(directions[wheelPosition]);
+        }
+    }
+
+    void enableDebugPause() {
+        pauseBeforeEachMovement = true;
+    }
+
+    void disableDebugPause() {
+        pauseBeforeEachMovement = false;
+    }
 
     /**
      * Get current orientation from IMU.
@@ -169,8 +208,8 @@ public class BetterMecanumDrive {
     /**
      * Set the current position for a specific wheel by updating its encoder offset.
      *
-     * @param wheel     Index of the wheel whose position is to be set.
-     * @param position  New current position (in encoder counts) for the specified wheel.
+     * @param wheel    Index of the wheel whose position is to be set.
+     * @param position New current position (in encoder counts) for the specified wheel.
      *                 This method updates the encoder offset for the wheel, which is used
      *                 to track the distance traveled by the robot.
      */
@@ -212,10 +251,10 @@ public class BetterMecanumDrive {
     /**
      * Scale wheel speeds if any of them exceeds the maximum allowed speed.
      *
-     * @param wheelSpeeds Array of wheel speeds (-1 to 1).
+     * @param wheelSpeeds Array of wheel speeds (approximately -1 to 1).
      * @return Scaled wheel speeds.
      */
-    double[] desaturateWheelSpeeds(double[] wheelSpeeds) {
+    double[] desaturateWheelPowers(double[] wheelSpeeds) {
         // Initialize a variable to store the maximum absolute speed
         double max = 0.0;
 
@@ -244,6 +283,12 @@ public class BetterMecanumDrive {
      * @param speed      Speed at which to move (-1 to 1).
      */
     public void moveForwardWithIMU(double distanceIn, double speed) {
+        if (pauseBeforeEachMovement) {
+            while (!opMode.gamepad1.a && !opMode.isStopRequested()) {
+
+            }
+        }
+
         // Determine the initial rotation angle for maintaining direction
         double targetRotation = getOrientation().firstAngle;
 
@@ -267,11 +312,29 @@ public class BetterMecanumDrive {
             wheelPowers[BACK_RIGHT] -= rotationalPIDOutput;
 
             // Desaturate wheel speeds to keep them within the valid range (-1 to 1)
-            wheelPowers = desaturateWheelSpeeds(wheelPowers);
+            wheelPowers = desaturateWheelPowers(wheelPowers);
 
             // Update the wheels with the calculated powers
             setWheelPowers(wheelPowers);
         }
+    }
+
+    /**
+     * Calculate the necessary wheel power for a wheel pointing in the specified angle to move the robot toward the desired target
+     * This function must be run for all wheels in the drivetrain separately
+     *
+     * @param movement_angle_rad The angle to move the robot
+     * @param movement_speed     The speed to move at
+     * @param wheel_angle_rad    The angle of the wheel to calculate power for
+     * @return The calculated power for the wheel
+     */
+
+    double calculate_wheel_power(double movement_angle_rad, double movement_speed, double wheel_angle_rad) {
+        if (movement_speed < 0) {
+            throw new IllegalArgumentException("Speed may not be negative");
+        }
+
+        return movement_speed * Math.cos(wheel_angle_rad - movement_angle_rad);
     }
 
     /**
@@ -283,8 +346,46 @@ public class BetterMecanumDrive {
      *                     If true, the angle is interpreted as a field-centric angle; if false,
      *                     it's interpreted as a robot-centric angle.
      */
-    public void move(double angle, double speed, boolean fieldCentric) {
-        double[] motorSpeeds = {speed, speed, speed, speed};
-        // TODO: Implement move functionality here
+    public void move(double angle, double speed, double spin, boolean fieldCentric) {
+        // Array to store the powers for each wheel
+        double[] wheelPowers = {0, 0, 0, 0};
+
+        // If the movement is field-centric, adjust the angle based on the robot's current heading
+        if (fieldCentric) {
+            angle -= getHeading();  // Factor out our current heading from the target heading
+        }
+
+        // Calculate the wheel powers for each wheel based on the angle, speed, and wheel force directions
+
+        wheelPowers[FRONT_LEFT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[FRONT_LEFT]) + spin;
+        wheelPowers[BACK_LEFT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[BACK_LEFT]) + spin;
+        wheelPowers[FRONT_RIGHT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[FRONT_RIGHT]) - spin;
+        wheelPowers[BACK_RIGHT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[BACK_RIGHT]) - spin;
+
+
+        wheelPowers = desaturateWheelPowers(wheelPowers);
+
+        // Apply the calculated wheel powers to the motors
+        setWheelPowers(wheelPowers);
     }
+
+    public void moveWithController(double leftStickX, double leftStickY, double rightStickX, double movementPowerMultiplier, double rotationPowerMultiplier, boolean fieldCentric) {
+        double target_movement_angle = Math.atan2(leftStickY, leftStickX);
+        double speed = Math.hypot(leftStickX, leftStickY) * movementPowerMultiplier;
+        double spin = rightStickX * rotationPowerMultiplier;
+
+
+        if (telemetry != null) {
+            telemetry.addData("TargetMovementAngle", target_movement_angle);
+            telemetry.addData("TargetSpeed", speed);
+            telemetry.addData("TargetSpin", speed);
+        }
+
+        move(target_movement_angle, speed, spin, fieldCentric);
+    }
+
+    public void displayTelemetry() {
+        telemetry.addData("e", 1);
+    }
+
 }
