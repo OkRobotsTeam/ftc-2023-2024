@@ -38,10 +38,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class CSRobot  {
 
 
-    public DcMotorEx shoulder = null;
+    public DcMotorEx leftShoulder = null;
+    public DcMotorEx rightShoulder = null;
     public DcMotorEx elbow = null;
     private DcMotorEx flippers = null;
-    private DcMotorEx belts = null;
 
     private Servo wrist = null;
     private Servo leftFinger = null;
@@ -82,21 +82,24 @@ public class CSRobot  {
 
     public void init(HardwareMap hardwareMap, Telemetry telemetryIn, LinearOpMode opModeIn) {
         telemetry = telemetryIn;
-        shoulder = hardwareMap.get(DcMotorEx.class, "shoulder");
+        leftShoulder = hardwareMap.get(DcMotorEx.class, "left_shoulder");
+        rightShoulder = hardwareMap.get(DcMotorEx.class, "right_shoulder");
+
         elbow = hardwareMap.get(DcMotorEx.class, "elbow");
 
         flippers = hardwareMap.get(DcMotorEx.class, "intake");
-        belts = hardwareMap.get(DcMotorEx.class, "belts");
 
         wrist = hardwareMap.get(Servo.class, "wrist");
         leftFinger = hardwareMap.get(Servo.class, "left_finger");
         rightFinger = hardwareMap.get(Servo.class, "right_finger");
         launcher = hardwareMap.get(CRServo.class, "launcher");
 
-        shoulder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        leftShoulder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        rightShoulder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         elbow.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        shoulder.setDirection(REVERSE);
+        leftShoulder.setDirection(REVERSE);
+        rightShoulder.setDirection(FORWARD);
         elbow.setDirection(REVERSE);
         wrist.setPosition(CSConstants.wristPickup);
     }
@@ -154,23 +157,19 @@ public class CSRobot  {
 
     public void runIntakeForward(){
         flippers.setPower(CSConstants.flipperPower);
-        belts.setPower(CSConstants.beltPower);
     }
 
     public void runIntakeForward(double speed){
         flippers.setPower(speed);
-        belts.setPower(speed);
     }
 
 
     public void runIntakeReverse(){
         flippers.setPower(-CSConstants.flipperPower);
-        belts.setPower(-CSConstants.beltPower);
     }
 
     public void stopIntake(){
         flippers.setPower(0);
-        belts.setPower(0);
     }
 
     public armStates getArmState() {
@@ -230,7 +229,8 @@ public class CSRobot  {
         elbowTarget = CSConstants.armPositions[1][armPosition];
         if (armState == armStates.FREE) {
             elbow.setTargetPosition(elbowTarget+elbowAdjust);
-            shoulder.setTargetPosition(shoulderTarget+shoulderAdjust);
+            leftShoulder.setTargetPosition(shoulderTarget+shoulderAdjust);
+            rightShoulder.setTargetPosition(shoulderTarget+shoulderAdjust);
             wristBasePosition = CSConstants.wristPositions[armPosition];
             wrist.setPosition(wristBasePosition + wristAdjust);
         }
@@ -259,7 +259,8 @@ public class CSRobot  {
         armPosition=0;
         shoulderAdjust=0;
         //start moving shoulder and elbow up, transition to undocking state
-        moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+        moveMotor(leftShoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+        moveMotor(rightShoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
         wrist.setPosition(CSConstants.wristDocking);
         wristStartedMoving = System.currentTimeMillis();
@@ -282,7 +283,8 @@ public class CSRobot  {
         }
 
         //start moving shoulder and elbow down, transition to docking1 state
-        moveMotor(shoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+        moveMotor(leftShoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+        moveMotor(rightShoulder, CSConstants.shoulderReadyForDockUndock, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
         moveMotor(elbow, CSConstants.elbowReadyForDockUndock, CSConstants.elbowPower, CSConstants.elbowTolerance);
 
         armState = armStates.UNDOCKING;
@@ -293,15 +295,16 @@ public class CSRobot  {
     public void doArmStateMachine() {
         switch (armState) {
             case DOCKED:
-                moveMotor(shoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                moveMotor(leftShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                moveMotor(rightShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
                 moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
-                if (belts.getPower() != 0) {
+                if (flippers.getPower() != 0) {
                     wrist.setPosition(CSConstants.wristPickup + Math.sin(System.currentTimeMillis() / 50.0) * 0.02);
                 }
                 break;
             case UNDOCKING:
 
-                if (isAtDestination(elbow) && isAtDestination(shoulder)) {
+                if (isAtDestination(elbow) && isAtDestination(leftShoulder) && isAtDestination(rightShoulder)) {
                     telemetry.addData("Undocking", "Undocking2");
                     armState = armStates.UNDOCKING2;
                     wrist.setPosition(CSConstants.wristDocking);
@@ -314,7 +317,8 @@ public class CSRobot  {
             case UNDOCKING2:
                 telemetry.addData("Undocking", "Undocking2");
                 if (System.currentTimeMillis() - wristStartedMoving > CSConstants.wristMoveMilliseconds) {
-                    moveMotor(shoulder, CSConstants.shoulderDefaultFreePosition, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                    moveMotor(leftShoulder, CSConstants.shoulderDefaultFreePosition, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                    moveMotor(rightShoulder, CSConstants.shoulderDefaultFreePosition, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
                     moveMotor(elbow, CSConstants.elbowDefaultFreePosition, CSConstants.elbowPower, CSConstants.elbowTolerance);
                     armState = armStates.FREE;
                     moveArmTarget();
@@ -326,7 +330,7 @@ public class CSRobot  {
                 //allow user to set arm position
                 break;
             case DOCKING1:
-                if (isAtDestination(elbow) && isAtDestination(shoulder) && servoDone()) {
+                if (isAtDestination(elbow) && isAtDestination(leftShoulder) && isAtDestination(rightShoulder) && servoDone()) {
                     //DOCKING2 Done, Transition to DOCKING3
                     wrist.setPosition(CSConstants.wristPickup);
                     armState=armStates.DOCKING2;
@@ -340,7 +344,8 @@ public class CSRobot  {
             case DOCKING2:
                 if (servoDone()) {
                     //DOCKING3 Done, Transition to DOCKED
-                    moveMotor(shoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                    moveMotor(leftShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
+                    moveMotor(rightShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
                     moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
                     //if enough time has passed for wrist to move, start dropping shoulder and elbow all the way down, transition to docked
                     armState=armStates.DOCKED;
@@ -352,10 +357,12 @@ public class CSRobot  {
     }
 
     public void doArmLift() {
-        shoulder.setTargetPosition(CSConstants.shoulderDefaultFreePosition);
+        leftShoulder.setTargetPosition(CSConstants.shoulderDefaultFreePosition);
+        rightShoulder.setTargetPosition(CSConstants.shoulderDefaultFreePosition);
         elbow.setTargetPosition(CSConstants.elbowDefaultFreePosition);
         elbow.setPower(1);
-        shoulder.setPower(1);
+        leftShoulder.setPower(1);
+        rightShoulder.setPower(1);
     }
 
     public void moveArm(int shoulderPositionIn, int elbowPositionIn, double wristPositionIn) {
@@ -363,7 +370,8 @@ public class CSRobot  {
             //only works in FREE state
             return;
         }
-        shoulder.setTargetPosition(shoulderPositionIn);
+        leftShoulder.setTargetPosition(shoulderPositionIn);
+        rightShoulder.setTargetPosition(shoulderPositionIn);
         elbow.setTargetPosition(elbowPositionIn);
         wrist.setPosition(wristPositionIn);
         wristBasePosition = wristPositionIn;
@@ -380,7 +388,7 @@ public class CSRobot  {
         wrist.setPosition(wristBasePosition + wristAdjust);
     }
     public double getShoulderPosition() {
-        return shoulder.getCurrentPosition();
+        return (leftShoulder.getCurrentPosition() + rightShoulder.getCurrentPosition()) / 2;
     }
 
     public double getElbowPosition() {
@@ -388,7 +396,7 @@ public class CSRobot  {
     }
 
 
-    public int getShoulderTargetPosition() { return shoulder.getTargetPosition(); }
+    public int getShoulderTargetPosition() { return (leftShoulder.getTargetPosition() + rightShoulder.getTargetPosition()) / 2; }
 
     public double getWristPosition() {
         return wristBasePosition+wristAdjust;

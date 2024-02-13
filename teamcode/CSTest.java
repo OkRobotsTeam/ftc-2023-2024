@@ -92,7 +92,8 @@ public class CSTest extends LinearOpMode implements MecanumDrive.TickCallback {
             robot.doArmStateMachine();
             robot.endgameTick();
             robot.elbow.setPower(0);
-            robot.shoulder.setPower(0);
+            robot.leftShoulder.setPower(0);
+            robot.rightShoulder.setPower(0);
             telemetry.addData("Shoulder", robot.getShoulderPosition());
             telemetry.addData("Elbow", robot.getElbowPosition());
             telemetry.addData("Wrist", robot.getWristPosition());
