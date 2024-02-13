@@ -49,9 +49,7 @@ public class CSConstants {
 
     public final static double endgameRuntimeSeconds = 1;
 
-    public final static double flipperPower = 0.5;
+    public final static double flipperPower = 1;
 
     public final static double beltPower = 1;
-
-
 }
