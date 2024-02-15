@@ -100,7 +100,7 @@ public class CSRobot  {
 
         leftShoulder.setDirection(REVERSE);
         rightShoulder.setDirection(FORWARD);
-        elbow.setDirection(REVERSE);
+        elbow.setDirection(FORWARD);
         wrist.setPosition(CSConstants.wristPickup);
     }
 
@@ -297,7 +297,7 @@ public class CSRobot  {
             case DOCKED:
                 moveMotor(leftShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
                 moveMotor(rightShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
-                moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
+                moveMotor(elbow, CSConstants.elbowDocked, CSConstants.elbowPowerLow, CSConstants.elbowTolerance);
                 if (flippers.getPower() != 0) {
                     wrist.setPosition(CSConstants.wristPickup + Math.sin(System.currentTimeMillis() / 50.0) * 0.02);
                 }
@@ -331,7 +331,7 @@ public class CSRobot  {
                 break;
             case DOCKING1:
                 if (isAtDestination(elbow) && isAtDestination(leftShoulder) && isAtDestination(rightShoulder) && servoDone()) {
-                    //DOCKING2 Done, Transition to DOCKING3
+                    //DOCKING1 Done, Transition to DOCKING2
                     wrist.setPosition(CSConstants.wristPickup);
                     armState=armStates.DOCKING2;
                     wristStartedMoving=System.currentTimeMillis();
@@ -343,10 +343,10 @@ public class CSRobot  {
 
             case DOCKING2:
                 if (servoDone()) {
-                    //DOCKING3 Done, Transition to DOCKED
+                    //DOCKING2 Done, Transition to DOCKED
                     moveMotor(leftShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
                     moveMotor(rightShoulder, CSConstants.shoulderDocked, CSConstants.shoulderPower, CSConstants.shoulderTolerance);
-                    moveMotor(elbow, CSConstants.elbowDocked, 0.1, CSConstants.elbowTolerance);
+                    moveMotor(elbow, CSConstants.elbowDocked, CSConstants.elbowPowerLow, CSConstants.elbowTolerance);
                     //if enough time has passed for wrist to move, start dropping shoulder and elbow all the way down, transition to docked
                     armState=armStates.DOCKED;
                     openLeftFinger();
