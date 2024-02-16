@@ -81,7 +81,6 @@ public class PIDController {
         }
 
         double error = target_value - measurement;
-
         error_integral += error * delta_time;
 
         if (ki != 0) {
@@ -89,12 +88,8 @@ public class PIDController {
         }
 
         error_derivative = (error - previous_error) / delta_time;
-
-
         control_output = kp * error + ki * error_integral + kd * error_derivative;
-
         previous_error = error;
-
         previous_time = System.currentTimeMillis() / 1000.0;
 
         return control_output;

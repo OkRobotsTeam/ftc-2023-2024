@@ -28,18 +28,18 @@ public class CSConstants {
 
 
         // PID parameters
-        public final static double drivetrainTurningKp = 1;
-        public final static double drivetrainTurningKi = 0;
-        public final static double drivetrainTurningKd = 0;
-        public final static double drivetrainTurningIntegralLimit = 1;
-        public final static double drivetrainTurningTimeStep = 0.05;
+        public final static double drivetrainTurningPIDKp = 1;
+        public final static double drivetrainTurningPIDKi = 0;
+        public final static double drivetrainTurningPIDKd = 0;
+        public final static double drivetrainTurningPIDIntegralLimit = 1;
+        public final static double drivetrainTurningPIDTimeStep = 0.05;
 
         public final static boolean isFieldCentricDuringTeleOp = false;
-        public final static double minimumMovementPower = 0.5;
-        public final static double maximumMovementPower = 1;
+        public final static double teleOpMinimumMovementPower = 0.5;
+        public final static double teleOpMaximumMovementPower = 1;
 
-        public final static double minimumTurnPower = 0.5;
-        public final static double maximumTurnPower = 1;
+        public final static double teleOpMinimumTurnPower = 0.5;
+        public final static double teleOpMaximumTurnPower = 1;
     }
 
 

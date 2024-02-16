@@ -54,6 +54,10 @@ public class BetterMecanumDrive {
     // State Variables
     private double[] encoderOffsets = {0.0, 0.0, 0.0, 0.0};
 
+    private double[] odometryLastMotorPositions = {0, 0, 0, 0};
+ 
+    private double[] odometryPosition = {0.0d, 0.0d};
+
     /**
      * Initialize the Mecanum drive with specified parameters.
      *
@@ -221,19 +225,44 @@ public class BetterMecanumDrive {
 
 
     /**
-     * Calculate the total distance traveled by the robot.
+     * Return the distance of the robot from a point
      *
-     * @return Total distance traveled in inches.
+     * @return Distance traveled in inches.
      */
-    public double getDistanceTraveledIn() {
-        // Calculate the average distance traveled by the left wheels
-        double leftDistanceIn = (getWheelPositionIn(FRONT_LEFT) + getWheelPositionIn(BACK_LEFT)) / 2;
+    public double getCurrentDistanceFromPoint(double[] point) {
+        double[] currentPosition = getOdometryPosition();
+        return Math.hypot(point[0] - currentPosition[0], point[1] - currentPosition[1]);
+    }
 
-        // Calculate the average distance traveled by the right wheels
-        double rightDistanceIn = (getWheelPositionIn(FRONT_RIGHT) + getWheelPositionIn(BACK_RIGHT)) / 2;
+    public void updateOdometry() {
+        double currentFrontLeftPosition = getWheelPositionIn(FRONT_LEFT);
+        double currentFrontRightPosition = getWheelPositionIn(FRONT_RIGHT);
+        double currentBackLeftPosition = getWheelPositionIn(BACK_LEFT);
+        double currentBackRightPosition = getWheelPositionIn(BACK_RIGHT);
 
-        // Calculate and return the average distance traveled by both sides
-        return (leftDistanceIn + rightDistanceIn) / 2;
+        double frontLeftDistanceThisTick = currentFrontLeftPosition - odometryLastMotorPositions[FRONT_LEFT];
+        double frontRightDistanceThisTick = currentFrontRightPosition - odometryLastMotorPositions[FRONT_LEFT];
+        double backLeftDistanceThisTick = currentBackLeftPosition - odometryLastMotorPositions[BACK_LEFT];
+        double backRightDistanceThisTick = currentBackRightPosition - odometryLastMotorPositions[BACK_RIGHT];
+
+        odometryLastMotorPositions[FRONT_LEFT] = currentFrontLeftPosition;
+        odometryLastMotorPositions[FRONT_RIGHT] = currentFrontRightPosition;
+        odometryLastMotorPositions[BACK_LEFT] = currentBackLeftPosition;
+        odometryLastMotorPositions[BACK_RIGHT] = currentBackRightPosition;
+
+        double deltaY = (frontLeftDistanceThisTick + frontRightDistanceThisTick + backLeftDistanceThisTick + backRightDistanceThisTick) / 4;
+        double deltaX = (frontLeftDistanceThisTick - frontRightDistanceThisTick - backLeftDistanceThisTick + backRightDistanceThisTick) / 4;
+
+        odometryPosition[0] += deltaX * Math.cos(Math.toRadians(getHeading()));
+        odometryPosition[1] += deltaY * Math.sin(Math.toRadians(getHeading()));
+    }
+
+    public double[] getOdometryPosition() {
+        return odometryPosition;
+    }
+
+    public void setOdometryPosition(double[] position) {
+        odometryPosition = position;
     }
 
     /**
@@ -277,31 +306,59 @@ public class BetterMecanumDrive {
 
 
     /**
-     * Move the robot forward with IMU feedback.
+     * Move the robot towards a target direction while maintaining a target heading with IMU feedback.
      *
      * @param distanceIn Distance to move in inches.
-     * @param speed      Speed at which to move (-1 to 1).
+     * @param power      Speed at which to move (-1 to 1).
      */
-    public void moveForwardWithIMU(double distanceIn, double speed) {
+    public void moveWithIMU(double targetRotation, double moveAngle, double distanceIn, double power) {
         if (pauseBeforeEachMovement) {
-            while (!opMode.gamepad1.a && !opMode.isStopRequested()) {
-
-            }
+            while (!opMode.gamepad1.a && !opMode.isStopRequested()) {}
         }
-
-        // Determine the initial rotation angle for maintaining direction
-        double targetRotation = getOrientation().firstAngle;
 
         // Reset distance traveled to start tracking from the current position
         resetDistanceTravelled();
 
+        setOdometryPosition(new double[] {0, 0});
+
+        double[] initialPosition = getOdometryPosition();
+
         // Continue moving until the specified distance is reached
-        while (getDistanceTraveledIn() < distanceIn) {
+        while (getCurrentDistanceFromPoint(initialPosition) < distanceIn) {
+            // Calculate the correction to maintain the target direction
+            double rotationalPIDOutput = rotationPID.update(getOrientation().firstAngle - targetRotation);
+
+            move(0, power, rotationalPIDOutput, false);
+        }
+    }
+
+    /**
+     * Turn to an angle with IMU feedback.
+     *
+     * @param angle     Angle to turn to in degrees.
+     * @param power     Speed at which to turn (-1 to 1).
+     */
+    public void turnToWithIMU(double angle, double power, double angleTolerance) {
+        if (pauseBeforeEachMovement) {
+            while (!opMode.gamepad1.a && !opMode.isStopRequested()) {}
+        }
+
+        // Determine the target angle to turn to
+        double targetRotation = angle;
+
+        // Reset distance traveled to start tracking from the current position
+        resetDistanceTravelled();
+
+        // Update the PID here so that the previous_error variable is updated
+        rotationPID.update(getOrientation().firstAngle - targetRotation);
+
+        // Continue moving until the specified distance is reached
+        while (rotationPID.previous_error > angleTolerance) {
             // Calculate the correction to maintain the initial direction
             double rotationalPIDOutput = rotationPID.update(getOrientation().firstAngle - targetRotation);
 
             // Set initial wheel powers (all wheels moving forward)
-            double[] wheelPowers = {speed, speed, speed, speed};
+            double[] wheelPowers = {0, 0, 0, 0};
 
             // Apply correction to left wheels (front and back)
             wheelPowers[FRONT_LEFT] += rotationalPIDOutput;
@@ -317,6 +374,10 @@ public class BetterMecanumDrive {
             // Update the wheels with the calculated powers
             setWheelPowers(wheelPowers);
         }
+    }
+
+    public void turnToWithIMU(double angle, double power) {
+        turnToWithIMU(angle, power, 3);
     }
 
     /**
@@ -356,24 +417,22 @@ public class BetterMecanumDrive {
         }
 
         // Calculate the wheel powers for each wheel based on the angle, speed, and wheel force directions
-
         wheelPowers[FRONT_LEFT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[FRONT_LEFT]) + spin;
         wheelPowers[BACK_LEFT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[BACK_LEFT]) + spin;
         wheelPowers[FRONT_RIGHT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[FRONT_RIGHT]) - spin;
         wheelPowers[BACK_RIGHT] = calculate_wheel_power(angle, speed, WHEEL_FORCE_DIRECTIONS_RAD[BACK_RIGHT]) - spin;
 
-
         wheelPowers = desaturateWheelPowers(wheelPowers);
 
         // Apply the calculated wheel powers to the motors
         setWheelPowers(wheelPowers);
+        updateOdometry();
     }
 
     public void moveWithController(double leftStickX, double leftStickY, double rightStickX, double movementPowerMultiplier, double rotationPowerMultiplier, boolean fieldCentric) {
         double target_movement_angle = Math.atan2(leftStickY, leftStickX);
         double speed = Math.hypot(leftStickX, leftStickY) * movementPowerMultiplier;
         double spin = rightStickX * rotationPowerMultiplier;
-
 
         if (telemetry != null) {
             telemetry.addData("TargetMovementAngle", target_movement_angle);
@@ -384,8 +443,15 @@ public class BetterMecanumDrive {
         move(target_movement_angle, speed, spin, fieldCentric);
     }
 
-    public void displayTelemetry() {
-        telemetry.addData("e", 1);
+    void telemetryDisplayMotorPosition() {
+        if (telemetry == null) {return;}
+
+        telemetry.addData("Motor Positions", "FRONT_LEFT:(%5.2f) FRONT_RIGHT:(%5.2f) BACK_LEFT:(%5.2f), BACK_RIGHT:(%5.2f)", getWheelPositionIn(FRONT_LEFT), getWheelPositionIn(FRONT_RIGHT), getWheelPositionIn(BACK_LEFT), getWheelPositionIn(BACK_RIGHT));
+    }
+    void telemetryDisplayMotorPower() {
+        if (telemetry == null) {return;}
+
+        telemetry.addData("Motor Velocities", "FRONT_LEFT:(%5.2f) FRONT_RIGHT:(%5.2f) BACK_LEFT:%(%5.2f) BACK_RIGHT:(%5.2f) ", motors[FRONT_LEFT].getPower(), motors[FRONT_RIGHT].getPower(), motors[BACK_LEFT].getPower(), motors[BACK_RIGHT].getPower());
     }
 
 }
