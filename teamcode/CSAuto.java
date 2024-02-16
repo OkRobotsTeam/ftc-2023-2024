@@ -47,7 +47,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
 
     private final MecanumDrive mecanumDrive = new MecanumDrive();
 
-    private enum Path {NONE, PARK, SCORE}
+    private enum Path {NONE, PARK, SCORE, TEST}
 
     ;
 
@@ -80,7 +80,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
 
         robot.init(hardwareMap, telemetry, this);
         mecanumDrive.init(hardwareMap, telemetry, this);
-        mecanumDrive.setCountPerDegree(8);
+        mecanumDrive.setCountPerDegree(9.16);
         mecanumDrive.setCountPerInch(40);
 
         // mecanumDrive.setupTickCallback(this);
@@ -133,6 +133,8 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
                 afterPath = Path.SCORE;
             } else if (gamepad1.b) {
                 afterPath = Path.NONE;
+            } else if (gamepad1.a) {
+                afterPath = Path.TEST;
             }
             if (gamepad1.dpad_left) {
                 backstage = true;
@@ -176,6 +178,14 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
             turnDirection = 1;
         }
 
+        if (afterPath == Path.TEST) {
+            //mecanumDrive.leftTurn(360,0.5);
+            mecanumDrive.backward(20,0.5);
+            mecanumDrive.turnTo(180, 0.5);
+            mecanumDrive.backward(20, 0.5);
+            mecanumDrive.turnTo(0,0.5);
+            return;
+        }
 
 //        mecanumDrive.leftTurn(5,0.5);
         mecanumDrive.backward(16, 0.5);

@@ -43,7 +43,7 @@ public class MecanumDrive {
 
     double                  globalAngle,  correction;
 
-    private HPMC[] motors = new HPMC[4];
+    public HPMC[] motors = new HPMC[4];
 
     private double[] power = new double[4];
     private long[] startingPositions = new long[4];
@@ -97,6 +97,7 @@ public class MecanumDrive {
         for (HPMC motor : motors) {
             motor.setPowerManual(0);
             motor.motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             motor.setTickTime(tickTime);
         }
@@ -112,6 +113,7 @@ public class MecanumDrive {
         motors[BL].setDirection(Direction.FORWARD);
         motors[FR].setDirection(Direction.FORWARD);
         motors[BR].setDirection(Direction.FORWARD);
+
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
@@ -395,7 +397,7 @@ public class MecanumDrive {
                 int i = 0;
                 for (HPMC motor : motors) {
                     if ((i == FL) || (i == BL)) {
-                        motor.smoothMoveSetup(distance * 1.3, power * 1.3, power * 25 + 2, power * 35 + 2, motorDirection, endStopped);
+                        motor.smoothMoveSetup(distance, power, power * 25 + 2, power * 35 + 2, motorDirection, endStopped);
                     } else {
                         motor.smoothMoveSetup(distance, power, power * 25 + 2, power * 35 + 2, motorDirection, endStopped);
                     }
