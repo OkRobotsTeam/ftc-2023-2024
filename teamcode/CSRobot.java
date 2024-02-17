@@ -98,10 +98,19 @@ public class CSRobot  {
         rightShoulder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         elbow.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
+
+
         leftShoulder.setDirection(REVERSE);
         rightShoulder.setDirection(FORWARD);
         elbow.setDirection(FORWARD);
+        moveElbow(200, 0.5);
+        opModeIn.sleep(500);
+        closeRightFinger();
+        closeLeftFinger();
         wrist.setPosition(CSConstants.wristPickup);
+        closeRightFinger();
+        opModeIn.sleep(500);
+        moveElbow(0, 0.2);
     }
 
     public void setArmFree() {
@@ -154,6 +163,19 @@ public class CSRobot  {
         setWristPositionWithAdjust();
     }
 
+    public void moveShoulder(int encoderCount, double power) {
+            leftShoulder.setTargetPosition(encoderCount);
+            rightShoulder.setTargetPosition(encoderCount);
+
+            leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION );
+            rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION );
+
+            leftShoulder.setPower(power);
+            rightShoulder.setPower(power);
+    }
+    public void setWrist(double position) {
+        wrist.setPosition(position);
+    }
 
     public void runIntakeForward(){
         flippers.setPower(CSConstants.flipperPower);
@@ -231,12 +253,21 @@ public class CSRobot  {
             elbow.setTargetPosition(elbowTarget+elbowAdjust);
             leftShoulder.setTargetPosition(shoulderTarget+shoulderAdjust);
             rightShoulder.setTargetPosition(shoulderTarget+shoulderAdjust);
+            leftShoulder.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            rightShoulder.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            elbow.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             wristBasePosition = CSConstants.wristPositions[armPosition];
             wrist.setPosition(wristBasePosition + wristAdjust);
         }
     }
 
-
+    public void moveArm(int position) {
+        armPosition = position;
+        moveArmTargetWithAdjustments();
+        leftShoulder.setPower(CSConstants.shoulderPower);
+        rightShoulder.setPower(CSConstants.shoulderPower);
+        elbow.setPower(CSConstants.elbowPower);
+    }
 
     public boolean isAtDestination(DcMotorEx motor) {
         return Math.abs(motor.getCurrentPosition() - motor.getTargetPosition()) <= motor.getTargetPositionTolerance();
@@ -375,6 +406,12 @@ public class CSRobot  {
         elbow.setTargetPosition(elbowPositionIn);
         wrist.setPosition(wristPositionIn);
         wristBasePosition = wristPositionIn;
+    }
+
+    public void moveElbow(int encoderCount, double power) {
+        elbow.setTargetPosition(encoderCount);
+        elbow.setMode(DcMotor.RunMode.RUN_TO_POSITION );
+        elbow.setPower(power);
     }
 
     public void setWristBasePosition(double positionIn) {

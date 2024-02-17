@@ -44,7 +44,7 @@ public class CSConstants {
     public final static int elbowDefaultFreePosition = armPositions[1][1];
 
     public final static double leftFingerOpenPosition = 1;
-    public final static double rightFingerOpenPosition = 0.5;
+    public final static double rightFingerOpenPosition = 0.0;
     public final static double leftFingerClosedPosition = 0;
     public final static double rightFingerClosedPosition = 1;
 

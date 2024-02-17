@@ -52,7 +52,7 @@ public class MecanumDrive {
 
 
     public long countPerInch = 40;
-    public long countPerInchStrafing = 0;
+    public long countPerInchStrafing = 40;
 
     public long getCountPerInch() {
         return countPerInch;
@@ -276,10 +276,13 @@ public class MecanumDrive {
         move(inches, power, MoveDirection.FORWARD, true);
     }
     void backward(double inches, double power) { move(inches, power, MoveDirection.BACKWARD, true); }
-    void leftStrafe (double inches, double power) {
-        move(inches, power, MoveDirection.LEFT, true);
+    void strafeLeft(double inches, double power) {
+        this.move(inches, power, MoveDirection.LEFT, true);
     }
-    void rightStrafe (double inches, double power) { move(inches, power, MoveDirection.RIGHT, true); }
+    void strafeRight(double inches, double power) {
+        opMode.sleep(1000);
+
+        this.move(inches, power, MoveDirection.RIGHT, true); }
     void leftTurn(double degrees, double power) {
         turn(degrees, power, MoveDirection.LEFT);
     }

@@ -37,7 +37,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.VisionProcessor;
 
 
 @Autonomous(name = "CSAuto", group = "Autonomous")
@@ -47,9 +46,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
 
     private final MecanumDrive mecanumDrive = new MecanumDrive();
 
-    private enum Path {NONE, PARK, SCORE, TEST}
-
-    ;
+    private enum Path {NONE, PARK, SCORE, TEST};
 
 
     private final CSRobot robot = new CSRobot();
@@ -70,8 +67,6 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
         }
         robot.openRightFinger();
         sleep(500);
-        mecanumDrive.backward(2, 0.5);
-        mecanumDrive.forward(5, 0.5);
     }
 
     @Override
@@ -90,8 +85,8 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
         boolean allianceSelected = false;
         boolean pathSelected = false;
         boolean backstageSelected = false;
-        boolean backstage = false;
-        Path afterPath = Path.NONE;
+        boolean backstage = true;
+        Path afterPath = Path.SCORE;
 
         // Tell the driver that initialization is complete.
         VisionPortal visionPortal = new VisionPortal.Builder()
@@ -104,6 +99,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
                 .build();
 
         ButtonPressDetector pad1pressDetector = new ButtonPressDetector(gamepad1);
+
         while (opModeInInit()) {
             if (gamepad1.right_bumper) {
                 visionProcessor.setAlliance(CSPropVisionProcessor.Alliance.RED);
@@ -134,7 +130,7 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
             } else if (gamepad1.b) {
                 afterPath = Path.NONE;
             } else if (gamepad1.a) {
-                afterPath = Path.TEST;
+                //afterPath = Path.TEST;
             }
             if (gamepad1.dpad_left) {
                 backstage = true;
@@ -149,29 +145,36 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
             telemetry.update();
             sleep(50);
         }
-        if (!allianceSelected) {
-            visionProcessor.setAlliance(CSPropVisionProcessor.Alliance.RED);
-        }
 
-        visionPortal.close();
+
 
         //Quit now if stop button was pressed instead of play.
         if (!opModeIsActive()) {
             return;
         }
-
-        path = visionProcessor.getDetectedPropZone();
-
+        //**PLAY BUTTON HIT**
+        if (gamepad1.a) {
+            mecanumDrive.enableDebugWait();
+        }
         robot.setArmFree();
         robot.closeLeftFinger();
         robot.closeRightFinger();
-        //robot.adjustElbow( CSConstants.elbowReadyForDockUndock);
-        robot.moveMotor(robot.elbow, 100, CSConstants.elbowPower, CSConstants.elbowTolerance);
+        robot.moveElbow( CSConstants.elbowReadyForDockUndock,CSConstants.elbowPower);
 
 
         int turnDirection;
+        boolean isRed;
+        if (visionProcessor != null) {
+            path = visionProcessor.getDetectedPropZone();
+            isRed = visionProcessor.getAlliance() == CSPropVisionProcessor.Alliance.RED;
+        } else {
+            isRed = false;
+            path=2;
+        }
+        visionPortal.close();
 
-        if (visionProcessor.getAlliance() == CSPropVisionProcessor.Alliance.RED) {
+
+        if (isRed ^ !backstage) {
             turnDirection = -1;
             path = 4 - path;
         } else {
@@ -190,77 +193,72 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
 //        mecanumDrive.leftTurn(5,0.5);
         mecanumDrive.backward(16, 0.5);
 
+        double frontTowardsTruss = 90 * turnDirection;
+        double frontAwayFromTruss = -90 * turnDirection;
 
         if (path == 1) {
-            mecanumDrive.backward(6, 0.2);
-            mecanumDrive.turnTo(-90 * turnDirection, 0.5);
+            mecanumDrive.backward(11, 0.2);
+            mecanumDrive.turnTo(frontAwayFromTruss, 0.5);
             mecanumDrive.forward(24, 0.5);
 
+            pixelDrop();
 
-            robot.setWristBasePosition(0.45);
-            sleep(CSConstants.wristMoveMilliseconds);
-            robot.moveMotor(robot.elbow, 0, CSConstants.elbowPower, CSConstants.elbowTolerance);
-            while (robot.elbow.isBusy() && opModeIsActive()) {
-                mecanumDrive.tickSleep();
-            }
-            robot.openRightFinger();
-            sleep(500);
             mecanumDrive.backward(6, 0.5);
-            mecanumDrive.forward(5, 0.5);
-
+            mecanumDrive.forward(7, 0.5);
+            mecanumDrive.turnTo(frontAwayFromTruss, 0.5);
 
         } else if (path == 2) {
-            mecanumDrive.backward(8, 0.2);
-            mecanumDrive.forward(6, 0.2);
+            mecanumDrive.backward(6, 0.2);
             pixelDrop();
+            mecanumDrive.backward(2, 0.5);
+            mecanumDrive.forward(3, 0.5);
 
-            mecanumDrive.turnTo(0, 0.5);
-            mecanumDrive.forward(18, 0.5);
-            mecanumDrive.turnTo(-100, 0.4);
-            if (turnDirection == -1) {
-                mecanumDrive.backward(25, 0.5);
-            } else {
-                mecanumDrive.forward(25, 0.5);
-            }
+            mecanumDrive.turnTo(frontTowardsTruss, 0.4);
+            mecanumDrive.backward(25, 0.5);
 
         } else if (path == 3) {
-            mecanumDrive.backward(8, 0.2);
-            mecanumDrive.turnTo(-90 * turnDirection, 0.4);
+            mecanumDrive.backward(11, 0.2);
+            mecanumDrive.turnTo(frontAwayFromTruss, 0.4);
             mecanumDrive.forward(4, 0.2);
             pixelDrop();
-            mecanumDrive.backward(4, 0.2);
-
-            mecanumDrive.turnTo(0, 0.4);
-            mecanumDrive.forward(22, 0.5);
-            mecanumDrive.turnTo(-100, 0.4);
-            if (turnDirection == -1) {
-                mecanumDrive.backward(25, 0.5);
-            } else {
-                mecanumDrive.forward(25, 0.5);
-            }
-
+            mecanumDrive.backward(8, 0.5);
+            mecanumDrive.forward(9, 0.5);
+            mecanumDrive.turnTo(frontTowardsTruss, 0.4);
+            mecanumDrive.backward(21, 0.5);
         }
-        if (afterPath == Path.PARK) {
+        if (afterPath == Path.SCORE) {
             if (backstage) {
-                if (path == 1) {
+                robot.moveElbow(600, 0.5);
+                double angle = frontTowardsTruss - (((path-1.5) * 30) * turnDirection);
+                mecanumDrive.turnTo(angle, 0.7);
 
-                } else if (path == 2) {
+                    robot.moveShoulder(1130, 0.5);
+                    robot.setWrist(0.34);
+                    mecanumDrive.backward(9, 0.5);
 
+                    mecanumDrive.turnTo(frontTowardsTruss, 0.5);
+                    mecanumDrive.turnTo(frontTowardsTruss, 0.5);
 
-                } else if (path == 3) {
+                    mecanumDrive.backward(4, 0.4);
+                    robot.openLeftFinger();
+                    sleep(500);
+                    mecanumDrive.forward(3, 0.5);
+                    robot.moveArm(1);
 
-                }
+                    mecanumDrive.turnTo(180, 0.5);
+                    if (path == 1) {
+                        mecanumDrive.backward(20, 0.5);
+                    } else if (path == 2) {
+                        mecanumDrive.backward(24, 0.5);
+                    } else if (path == 3) {
+                        mecanumDrive.backward(28, 0.5);
+                    }
+                    strafeMiddle(isRed, 24);
             } else {
-                //Frontstage
-
-                if (path == 1) {
-
-                } else if (path == 2) {
+                //farstage
+                mecanumDrive.turnTo(0, 0.5);
 
 
-                } else if (path == 3) {
-
-                }
             }
 
         }
@@ -281,6 +279,16 @@ public class CSAuto extends LinearOpMode implements MecanumDrive.TickCallback {
         mecanumDrive.tickSleep();
     }
 
+    public void strafeWall(boolean isRed, double distance ) {
+        if (isRed) {
+            mecanumDrive.strafeLeft(distance, 1);
+        } else {
+            mecanumDrive.strafeRight(distance, 1);
+        }
+    }
+    public void strafeMiddle(boolean isRed, double distance) {
+        strafeWall(!isRed, distance);
+    }
     public void debugOutput() {
         telemetry.addData("Prop Zone Detected", visionProcessor.getDetectedPropZone());
         telemetry.addData("Shoulder", robot.getShoulderPosition());
